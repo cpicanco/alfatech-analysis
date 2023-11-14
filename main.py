@@ -19,6 +19,7 @@ with geic_db.connect() as connection:
 
     # Fetch and print the rows
     print(result.keys())
-    rows = result.fetchall()
+    # rows = result.fetchall()
+    rows = result.fetchmany(10)
     for row in rows:
         print(row)
