@@ -1,6 +1,7 @@
 # python modulararization
 import os
 import sys
+import datetime
 
 base_dir = os.path.abspath(__file__).rsplit("figures", 1)[0]
 sys.path.append(os.path.join(base_dir))
@@ -21,49 +22,67 @@ def populate_acole_data():
     oldest_acole_template = template_from_name('oldest_program_registration_from_student')
     trials_template = template_from_name('trials_from_student')
 
-    # populate ACOLE data
-    with geic_db.connect() as connection:
-        students = connection.execute(text(students_template)).fetchall()
-        for student_data in students:
-            if 'DUPLICATA DESCONSIDERAR' in student_data.FULLNAME:
-                continue
 
-            student = student_data.ID
+    with open(ACOLE.filename()+'.tsv', 'w', encoding='utf8') as file:
+        file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS']) + '\n')
+        # populate ACOLE data
+        with geic_db.connect() as connection:
+            students = connection.execute(text(students_template)).fetchall()
+            for student_data in students:
+                if 'DUPLICATA DESCONSIDERAR' in student_data.FULLNAME:
+                    continue
 
-            acole_registration_template = text(oldest_acole_template).bindparams(
-                STUDENT_ID=student,
-                PROGRAM_ID=ACOLE.ID)
-            acole_registration_query = connection.execute(acole_registration_template)
-            acole_registration = acole_registration_query.fetchall()
-            if acole_registration == []:
-                continue
-            acole_registration_id = acole_registration[0][0]
+                student = student_data.ID
 
-            def get_trials(block_id):
-                trials = connection.execute(text(trials_template).bindparams(
+                acole_registration_template = text(oldest_acole_template).bindparams(
                     STUDENT_ID=student,
-                    REGISTRATION_ID=acole_registration_id,
-                    BLOCK_ID=block_id)).fetchall()
-                return [trial.RESULTADO for trial in trials]
+                    PROGRAM_ID=ACOLE.ID)
+                acole_registration_query = connection.execute(acole_registration_template)
+                acole_registration = acole_registration_query.fetchall()
+                if acole_registration == []:
+                    continue
+                acole_registration_id = acole_registration[0][0]
 
-            for block in ACOLE.blocks:
-                trials = get_trials(block)
-                trials_len = len(trials)
-                if trials_len > 0:
-                    ACOLE.data[block]['students'].append(student_data)
-                    porcentage = sum(trials)*100.0/trials_len
-                    if porcentage > 100:
-                        print(ACOLE.student_fullname(student_data) + '(ID:' + str(student) + ')' + ' - ',
-                            ACOLE.data[block]['legend'] + '(ID:' + str(acole_registration_id) + ')',
-                            porcentage, trials_len)
-                        print(trials)
+                def get_trials(block_id):
+                    trials = connection.execute(text(trials_template).bindparams(
+                        STUDENT_ID=student,
+                        REGISTRATION_ID=acole_registration_id,
+                        BLOCK_ID=block_id)).fetchall()
+                    if trials == []:
+                        date = datetime.datetime(1900, 1, 1)
+                    else:
+                        date = trials[0].DATA_EXECUCAO_INICIO
 
-                    ACOLE.data[block]['trials'].append(trials)
-                    ACOLE.data[block]['porcentages'].append(porcentage)
-                    # print(ACOLE.student_fullname(student_data) + '(ID:' + str(student) + ')' + ' - ',
-                    #     ACOLE.data[block]['legend'] + '(ID:' + str(acole_registration_id) + ')',
-                    #     porcentage, trials_len)
+                    return ([trial.RESULTADO if trial.RESULTADO <= 1 else 0 for trial in trials], date)
 
+                for block in ACOLE.blocks:
+                    (trials, date) = get_trials(block)
+                    trials_len = len(trials)
+                    if trials_len > 0:
+                        ACOLE.data[block]['students'].append(student_data)
+                        porcentage = sum(trials)*100.0/trials_len
+                        if porcentage > 100:
+                            print(ACOLE.student_fullname(student_data) + '(ID:' + str(student) + ')' + ' - ',
+                                ACOLE.data[block]['legend'] + '(ID:' + str(acole_registration_id) + ')',
+                                porcentage, trials_len)
+                            print(trials)
+                            raise Exception('Porcentagem maior que 100%')
+
+                        ACOLE.data[block]['trials'].append(trials)
+                        ACOLE.data[block]['porcentages'].append(porcentage)
+                    else:
+                        porcentage = None
+                        trials_len = None
+                    info = '\t'.join([
+                        ACOLE.student_fullname(student_data),
+                        str(student),
+                        ACOLE.data[block]['legend'],
+                        date.strftime('%d/%m/%Y'),
+                        str(acole_registration_id),
+                        str(porcentage),
+                        str(trials_len)])
+                    print(info)
+                    file.write(info + '\n')
 
 # bar plot with mean results for block
 def bar_plot_mean_trial_results(ACOLE_block_ids):
@@ -156,15 +175,12 @@ def bar_plot_regular_difficult_groups():
 
     plt.savefig(os.path.join(base_dir, 'figures', 'Fig17.png'), bbox_inches='tight')
 
-
-
 if __name__ == "__main__":
-    populate_acole_data()
-    # if ACOLE.cache_exists():
-    #     ACOLE = ACOLE.load_from_file()
-    # else:
-    #     populate_acole_data()
-    #     ACOLE.save_to_file()
+    if ACOLE.cache_exists():
+        ACOLE = ACOLE.load_from_file()
+    else:
+        populate_acole_data()
+        ACOLE.save_to_file()
 
-    # # bar_plot_mean_trial_results(ACOLE.blocks)
-    # bar_plot_regular_difficult_groups()
+    # bar_plot_mean_trial_results(ACOLE.blocks)
+    bar_plot_regular_difficult_groups()
