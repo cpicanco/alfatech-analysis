@@ -1,6 +1,5 @@
-"""
-By Leonardo Marques.
-"""
+/* By Leonardo Marques */
+
 CREATE TABLE Resultado_AlfaTech_ALEPP_ID143
 SELECT
        MATRICULA.`ALUNO_ID`,
