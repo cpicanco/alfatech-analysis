@@ -52,26 +52,29 @@ def populate_acole_data():
                         date = datetime.datetime(1900, 1, 1)
                     else:
                         date = trials[0].DATA_EXECUCAO_INICIO
-
-                    return ([trial.RESULTADO if trial.RESULTADO <= 1 else 0 for trial in trials], date)
+                    if student == 10157:
+                        print('ANTES:', trials)
+                    return ([1 if trial.RESULTADO < 1 else 0 for trial in trials], date)
 
                 for block in ACOLE.blocks:
                     (trials, date) = get_trials(block)
                     trials_len = len(trials)
                     if trials_len > 0:
+                        if student == 10157:
+                            print('DEPOIS:', trials)
                         ACOLE.data[block]['students'].append(student_data)
-                        porcentage = sum(trials)*100.0/trials_len
-                        if porcentage > 100:
+                        percentage = sum(trials)*100.0/trials_len
+                        if percentage > 100:
                             print(ACOLE.student_fullname(student_data) + '(ID:' + str(student) + ')' + ' - ',
                                 ACOLE.data[block]['legend'] + '(ID:' + str(acole_registration_id) + ')',
-                                porcentage, trials_len)
+                                percentage, trials_len)
                             print(trials)
                             raise Exception('Porcentagem maior que 100%')
 
                         ACOLE.data[block]['trials'].append(trials)
-                        ACOLE.data[block]['porcentages'].append(porcentage)
+                        ACOLE.data[block]['percentages'].append(percentage)
                     else:
-                        porcentage = None
+                        percentage = None
                         trials_len = None
                     info = '\t'.join([
                         ACOLE.student_fullname(student_data),
@@ -79,12 +82,11 @@ def populate_acole_data():
                         ACOLE.data[block]['legend'],
                         date.strftime('%d/%m/%Y'),
                         str(acole_registration_id),
-                        str(porcentage),
+                        str(percentage),
                         str(trials_len)])
                     print(info)
                     file.write(info + '\n')
 
-# bar plot with mean results for block
 def bar_plot_mean_trial_results(ACOLE_block_ids):
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
@@ -102,78 +104,93 @@ def bar_plot_mean_trial_results(ACOLE_block_ids):
     for block_id in ACOLE_block_ids:
         ax.bar(
             ACOLE_block_ids.index(block_id),
-            np.mean(ACOLE.data[block_id]['porcentages']),
-            yerr=np.std(ACOLE.data[block_id]['porcentages']),
+            np.mean(ACOLE.data[block_id]['percentages']),
+            yerr=np.std(ACOLE.data[block_id]['percentages']),
             label=ACOLE.data[block_id]['legend'])
 
     ax.legend()
 
     plt.savefig(os.path.join(base_dir, 'figures', 'Fig17.png'), bbox_inches='tight')
 
+def mean_porcentage_from_block(Container, block_id):
+    percentages = Container.data[block_id]['percentages']
+    percentages = [p for p in percentages if p is not None]
+    if len(percentages) > 0:
+        bar_value = np.mean(percentages)
+        bar_std = np.std(percentages)
+    else:
+        bar_value = np.nan
+        bar_std = np.nan
+    return bar_value, bar_std
+
+def mean_porcentage_from_blocks(Container, block_ids):
+    bar_values = []
+    bar_std = []
+    for block_id in block_ids:
+        bar_value, bar_std_value = mean_porcentage_from_block(Container, block_id)
+        bar_values.append(bar_value)
+        bar_std.append(bar_std_value)
+    return bar_values, bar_std
+
 def bar_plot_regular_difficult_groups():
-    fig, ax = plt.subplots()
-    fig.set_size_inches(10, 5)
+    fig, axs = plt.subplots(1, 2, sharey=True)
+    fig.set_size_inches(8, 5)
     fig.set_dpi(100)
+    fig.suptitle('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas')
 
-    ax.set_title('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas')
-    ax.set_xlabel('Bloco de palavras')
-    ax.set_ylabel('Porcentagem de acertos')
+    for ax in axs:
+        ax.set_ylim(0, 100)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
+    # Group 1 - Regular Blocks
     normal_blocks = [
         ACOLE.LEITURA,
         ACOLE.DITADO_COMPOSICAO,
         ACOLE.DITADO_MANUSCRITO]
 
+    categories = [ACOLE.data[block_id]['legend'].replace('Ditado ', 'Ditado\n') for block_id in normal_blocks]
+    bar_positions = np.arange(len(normal_blocks))
+
+    bar_values, bar_std = mean_porcentage_from_blocks(ACOLE, normal_blocks)
+
+    axs[0].set_ylabel('Porcentagem de acertos')
+    axs[0].set_title('Palavras regulares')
+    axs[0].bar(
+        bar_positions,
+        bar_values,
+        yerr=bar_std)
+
+    axs[0].set_xticks(bar_positions)
+    axs[0].set_xticklabels(categories)
+
+    # Group 2 - Difficult Blocks
     difficult_blocks = [
         ACOLE.LEITURA_DIFICULDADES,
         ACOLE.DITADO_COMPOSICAO_DIFICULDADES,
         ACOLE.DITADO_MANUSCRITO_DIFICULDADES]
 
-    categories = [ACOLE.data[block_id]['legend'] for block_id in normal_blocks]
+    bar_positions = np.arange(len(difficult_blocks))
 
-    ax.set_ylim(0, 100)
+    bar_values, bar_std = mean_porcentage_from_blocks(ACOLE, difficult_blocks)
 
-    bar_width = 0.35
-    # Calculate the positions for the bars
-    bar_positions_regular = np.arange(len(categories))
-    bar_positions_difficu = bar_positions_regular + bar_width
+    axs[1].set_title('Palavras com\ndificuldades ortográficas')
+    axs[1].spines['left'].set_visible(False)
+    axs[1].bar(
+        bar_positions,
+        bar_values,
+        yerr=bar_std)
 
-    bar_values_regular = []
-    bas_std_regular = []
-    for block_id in normal_blocks:
-        bar_values_regular.append(np.mean(ACOLE.data[block_id]['porcentages']))
-        bas_std_regular.append(np.std(ACOLE.data[block_id]['porcentages']))
-    bar_values_regular = np.array(bar_values_regular)
+    axs[1].set_xticks(bar_positions)
+    axs[1].set_xticklabels(categories)
 
-    bar_values_difficu = []
-    bar_std_difficu = []
-    for block_id in difficult_blocks:
-        bar_values_difficu.append(np.mean(ACOLE.data[block_id]['porcentages']))
-        bar_std_difficu.append(np.std(ACOLE.data[block_id]['porcentages']))
-
-    bar_values_difficu = np.array(bar_values_difficu)
-    ax.bar(
-        bar_positions_regular,
-        bar_values_regular,
-        width=bar_width,
-        yerr=bas_std_regular,
-        label='Regulares')
-
-    ax.bar(
-        bar_positions_difficu,
-        bar_values_difficu,
-        width=bar_width,
-        yerr=bar_std_difficu,
-        label='Com dificuldades ortográficas')
-
-    plt.legend(loc='upper left')
-    plt.xticks(bar_positions_regular + bar_width / 2, categories)
-
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
-    plt.gca().spines['bottom'].set_visible(False)
-
+    plt.tight_layout()
     plt.savefig(os.path.join(base_dir, 'figures', 'Fig17.png'), bbox_inches='tight')
+
+# Call the function
+bar_plot_regular_difficult_groups()
 
 if __name__ == "__main__":
     if ACOLE.cache_exists():
