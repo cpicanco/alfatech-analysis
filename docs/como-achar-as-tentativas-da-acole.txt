@@ -1,0 +1,6 @@
+Editar projeto 'ALFATECH 2022-2023' >
+Matrículas - 'NOME DO ALUNO' >
+Sessões do programa 'Avaliação Comportamental de Leitura e Escrita - ACoLE' >
+Passos executados >
+Blocos executados no passo 'Diagnóstico de Leitura e Escrita (DLE) - 1' >
+Tentativas executadas no bloco 'XXX'
