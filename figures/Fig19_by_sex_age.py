@@ -12,105 +12,8 @@ import matplotlib.patches as patches
 import numpy as np
 
 # database
-from sqlalchemy import text
-
-from queries import template_from_name
-from databases import geic_db, ACOLE
-
-def populate_acole_data():
-    # get template files
-    students_template = template_from_name('students_from_alphatech')
-    oldest_acole_template = template_from_name('oldest_program_registration_from_student')
-    trials_template = template_from_name('trials_from_student')
-
-
-    with open(ACOLE.filename()+'.tsv', 'w', encoding='utf8') as file:
-        file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS']) + '\n')
-        # populate ACOLE data
-        with geic_db.connect() as connection:
-            students = connection.execute(text(students_template)).fetchall()
-            for student_data in students:
-                if 'DUPLICATA DESCONSIDERAR' in student_data.FULLNAME:
-                    continue
-
-                student = student_data.ID
-
-                acole_registration_template = text(oldest_acole_template).bindparams(
-                    STUDENT_ID=student,
-                    PROGRAM_ID=ACOLE.id)
-                acole_registration_query = connection.execute(acole_registration_template)
-                acole_registration = acole_registration_query.fetchall()
-                if acole_registration == []:
-                    continue
-                acole_registration_id = acole_registration[0][0]
-
-                def get_trials(block_id):
-                    trials = connection.execute(text(trials_template).bindparams(
-                        PROGRAM_ID=ACOLE.id,
-                        STUDENT_ID=student,
-                        REGISTRATION_ID=acole_registration_id,
-                        BLOCK_ID=block_id)).fetchall()
-                    if trials == []:
-                        date = datetime.datetime(1900, 1, 1)
-                    else:
-                        date = trials[0].DATA_EXECUCAO_INICIO
-
-                    return ([1 if trial.RESULTADO < 1 else 0 for trial in trials], date)
-
-                for block in ACOLE.blocks:
-                    (trials, date) = get_trials(block.id)
-                    trials_len = len(trials)
-                    if trials_len > 0:
-                        block.data['students'].append(student_data)
-                        percentage = sum(trials)*100.0/trials_len
-                        if percentage > 100:
-                            print(ACOLE.student_fullname(student_data) + '(ID:' + str(student) + ')' + ' - ',
-                                block.legend + '(ID:' + str(acole_registration_id) + ')',
-                                percentage, trials_len)
-                            print(trials)
-                            raise Exception('Porcentagem maior que 100%')
-
-                        block.data['trials'].append(trials)
-                        block.data['percentages'].append(percentage)
-                    else:
-                        percentage = None
-                        trials_len = None
-                    info = '\t'.join([
-                        ACOLE.student_fullname(student_data),
-                        str(student),
-                        block.legend,
-                        str(block.id),
-                        date.strftime('%d/%m/%Y'),
-                        str(acole_registration_id),
-                        str(percentage),
-                        str(trials_len)])
-                    # print(info)
-                    file.write(info + '\n')
-
-def statistics_from_block(block):
-    percentages = block.data['percentages']
-    percentages = [p for p in percentages if p is not None]
-    bar_length = len(percentages)
-    if bar_length > 0:
-        bar_value = np.mean(percentages)
-        bar_std = np.std(percentages)
-        bar_median = np.median(percentages)
-    else:
-        bar_value = np.nan
-        bar_std = np.nan
-        bar_median = np.nan
-
-    return bar_value, bar_std, bar_length, bar_median
-
-def statistics_from_blocks(blocks):
-    bar_values, bar_stds, bar_lengths, bar_medians = [], [], [], []
-    for block in blocks:
-        bar_value, bar_std, bar_length, bar_median = statistics_from_block(block)
-        bar_lengths.append(bar_value)
-        bar_values.append(bar_std)
-        bar_stds.append(bar_length)
-        bar_medians.append(bar_median)
-    return bar_values, bar_stds, bar_lengths, bar_medians
+from databases import geic_db, ACOLE, populate_acole_data
+from methods import statistics_from_block
 
 def plot_blocks(ax, grouped_data, title):
     num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
@@ -122,7 +25,7 @@ def plot_blocks(ax, grouped_data, title):
     for i, block_group in enumerate(grouped_data):
         for j, age_block in enumerate(block_group):
             bar_position = (i) + (i * num_blocks + j) * bar_width
-            bar_value, bar_std, bar_length, bar_median = statistics_from_block(age_block)
+            bar_value, bar_std, bar_length, bar_median, _, _ = statistics_from_block(age_block)
 
             if j == 0:
                 bar_positions.append(bar_position)
@@ -246,10 +149,6 @@ def bar_plot_regular_difficult_groups(ACOLE):
             plot_blocks(axs[i, 0], normal_blocks, '')
             plot_blocks(axs[i, 1], difficult_blocks, '')
 
-    # plot_blocks(axs[1, 0], normal_blocks, 'Palavras regulares')
-
-    # plot_blocks(axs[1, 1], difficult_blocks, 'Palavras com\ndificuldades ortográficas')
-
     handles, labels = axs[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.445), ncol=len(grouped_ages))
 
@@ -274,14 +173,6 @@ def bar_plot_regular_difficult_groups(ACOLE):
     plt.savefig(os.path.join(base_dir, 'figures', 'Fig19.png'), bbox_inches='tight')
 
 if __name__ == "__main__":
-    if ACOLE.cache_exists():
-        print('Loading from cache')
-        ACOLE = ACOLE.load_from_file()
-    else:
-        print('Populating cache')
-        populate_acole_data()
-        ACOLE.save_to_file()
-
     bar_plot_regular_difficult_groups(ACOLE)
 
     # for sex, count in ACOLE.sexes(count=True).items():

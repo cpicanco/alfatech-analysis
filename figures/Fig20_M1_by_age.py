@@ -10,106 +10,8 @@ sys.path.append(os.path.join(base_dir))
 import matplotlib.pyplot as plt
 import numpy as np
 
-# database
-from sqlalchemy import text
-
-from queries import template_from_name
-from databases import geic_db, ACOLE
-
-def populate_acole_data():
-    # get template files
-    students_template = template_from_name('students_from_alphatech')
-    oldest_acole_template = template_from_name('oldest_program_registration_from_student')
-    trials_template = template_from_name('trials_from_student')
-
-
-    with open(ACOLE.filename()+'.tsv', 'w', encoding='utf8') as file:
-        file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS']) + '\n')
-        # populate ACOLE data
-        with geic_db.connect() as connection:
-            students = connection.execute(text(students_template)).fetchall()
-            for student_data in students:
-                if 'DUPLICATA DESCONSIDERAR' in student_data.FULLNAME:
-                    continue
-
-                student = student_data.ID
-
-                acole_registration_template = text(oldest_acole_template).bindparams(
-                    STUDENT_ID=student,
-                    PROGRAM_ID=ACOLE.id)
-                acole_registration_query = connection.execute(acole_registration_template)
-                acole_registration = acole_registration_query.fetchall()
-                if acole_registration == []:
-                    continue
-                acole_registration_id = acole_registration[0][0]
-
-                def get_trials(block_id):
-                    trials = connection.execute(text(trials_template).bindparams(
-                        PROGRAM_ID=ACOLE.id,
-                        STUDENT_ID=student,
-                        REGISTRATION_ID=acole_registration_id,
-                        BLOCK_ID=block_id)).fetchall()
-                    if trials == []:
-                        date = datetime.datetime(1900, 1, 1)
-                    else:
-                        date = trials[0].DATA_EXECUCAO_INICIO
-
-                    return ([1 if trial.RESULTADO < 1 else 0 for trial in trials], date)
-
-                for block in ACOLE.blocks:
-                    (trials, date) = get_trials(block.id)
-                    trials_len = len(trials)
-                    if trials_len > 0:
-                        block.data['students'].append(student_data)
-                        percentage = sum(trials)*100.0/trials_len
-                        if percentage > 100:
-                            print(ACOLE.student_fullname(student_data) + '(ID:' + str(student) + ')' + ' - ',
-                                block.legend + '(ID:' + str(acole_registration_id) + ')',
-                                percentage, trials_len)
-                            print(trials)
-                            raise Exception('Porcentagem maior que 100%')
-
-                        block.data['trials'].append(trials)
-                        block.data['percentages'].append(percentage)
-                    else:
-                        percentage = None
-                        trials_len = None
-                    info = '\t'.join([
-                        ACOLE.student_fullname(student_data),
-                        str(student),
-                        block.legend,
-                        str(block.id),
-                        date.strftime('%d/%m/%Y'),
-                        str(acole_registration_id),
-                        str(percentage),
-                        str(trials_len)])
-                    # print(info)
-                    file.write(info + '\n')
-
-def statistics_from_block(block):
-    percentages = block.data['percentages']
-    percentages = [p for p in percentages if p is not None]
-    bar_length = len(percentages)
-    if bar_length > 0:
-        bar_value = np.mean(percentages)
-        bar_std = np.std(percentages)
-        bar_median = np.median(percentages)
-    else:
-        bar_value = np.nan
-        bar_std = np.nan
-        bar_median = np.nan
-
-    return bar_value, bar_std, bar_length, bar_median
-
-def statistics_from_blocks(blocks):
-    bar_values, bar_stds, bar_lengths, bar_medians = [], [], [], []
-    for block in blocks:
-        bar_value, bar_std, bar_length, bar_median = statistics_from_block(block)
-        bar_lengths.append(bar_value)
-        bar_values.append(bar_std)
-        bar_stds.append(bar_length)
-        bar_medians.append(bar_median)
-    return bar_values, bar_stds, bar_lengths, bar_medians
+from databases import geic_db, ACOLE, populate_acole_data
+from methods import statistics_from_block
 
 def plot_blocks(ax, grouped_data, title):
     num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
@@ -120,9 +22,9 @@ def plot_blocks(ax, grouped_data, title):
     bar_positions = []
     for i, block_group in enumerate(grouped_data):
         for j, age_block in enumerate(block_group):
-            bar_position = (i*1.8) + (i * num_blocks + j) * bar_width
-            bar_value, bar_std, bar_length, bar_median = statistics_from_block(age_block)
-            
+            bar_position = (i) + (i * num_blocks + j) * bar_width
+            bar_value, bar_std, bar_length, bar_median, _, _ = statistics_from_block(age_block)
+
             if j == 0:
                 bar_positions.append(bar_position)
 
@@ -132,22 +34,23 @@ def plot_blocks(ax, grouped_data, title):
                 bars = ax.bar(bar_position, bar_value, width=bar_width-0.05, color=f'C{j}')
             # Annotate mean on top of each bar
             x_pos = bar_position
-            if j % 2 == 0:
-                y_pos = bar_value + 20  # Adjust the vertical position based on your preference
-            else:
-                y_pos = -20
+            y_pos = bar_value + 20
+            # if j % 2 == 0:
+            #     y_pos = bar_value + 20  # Adjust the vertical position based on your preference
+            # else:
+            #     y_pos = -20
 
-            ax.text(x_pos, y_pos, f'{bar_value:.1f}', ha='center', color='black')
-            ax.text(x_pos, y_pos - 5, f'{bar_median:.1f}', ha='center', color='black')
-            ax.text(x_pos, y_pos - 10, f'{bar_std:.1f}', ha='center', color='black')
-            ax.text(x_pos, y_pos - 15, f'{bar_length}', ha='center', color='black')
+            ax.text(x_pos, y_pos, f'{bar_value:.1f}', ha='center', color='black', fontsize=9)
+            ax.text(x_pos, y_pos - 5, f'{bar_median:.1f}', ha='center', color='black', fontsize=9)
+            ax.text(x_pos, y_pos - 10, f'{bar_std:.1f}', ha='center', color='black', fontsize=9)
+            ax.text(x_pos, y_pos - 15, f'{bar_length}', ha='center', color='black', fontsize=9)
 
-    x_pos = 0
-    y_pos = -20
-    ax.text(x_pos, y_pos, 'M =', ha='right', color='black')
-    ax.text(x_pos, y_pos - 5, 'Me =', ha='right', color='black')
-    ax.text(x_pos, y_pos - 10, 'σ =', ha='right', color='black')
-    ax.text(x_pos, y_pos - 15, 'n =', ha='right', color='black')
+    # x_pos = 90
+    # y_pos = 90
+    # ax.text(x_pos, y_pos, 'M =', ha='right', color='black')
+    # ax.text(x_pos, y_pos - 5, 'Me =', ha='right', color='black')
+    # ax.text(x_pos, y_pos - 10, 'σ =', ha='right', color='black')
+    # ax.text(x_pos, y_pos - 15, 'n =', ha='right', color='black')
 
     ax.set_ylim(0, 100)
     ax.set_title(title)
@@ -162,76 +65,86 @@ def plot_blocks(ax, grouped_data, title):
     ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
 
 def bar_plot_regular_difficult_groups(ACOLE):
-    fig, axs = plt.subplots(1, 2, sharey=True)
-    fig.set_size_inches(14, 7)
+    fig, axs = plt.subplots(3, 2, sharey=True)
+    fig.set_size_inches(12, 18)
     fig.set_dpi(100)
-    fig.suptitle('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade')
+    fig.suptitle('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade e sexo')
 
-    # 7: 3 data points
-    # 8: 111 data points
-    # 9: 496 data points
-    # 10: 850 data points
-    # 11: 685 data points
-    # 12: 321 data points
-    # 13: 141 data points
-    # 14: 24 data points
-    # 15: 6 data points
-    # 19: 3 data points
-    grouped_ages = [[7, 8], [9], [10], [11], [12], [13, 14, 15, 19]]
+    top_label = ['Palavras regulares', 'Palavras com\ndificuldades ortográficas']
 
-    all_data = [ACOLE.by_age(ages) for ages in grouped_ages]
+    m1 = ACOLE.by_forwarding('Módulo 1')
+    m2 = ACOLE.by_forwarding('Módulo 2')
+    m3 = ACOLE.by_forwarding('Módulo 3')
 
-    leitura = []
-    ditado_composicao = []
-    ditado_manuscrito = []
-    leitura_dificuldades = []
-    ditado_composicao_dificuldades = []
-    ditado_manuscrito_dificuldades = []
+    for i, ACOLE_by_module in enumerate([m1, m2, m3]):
+        # grouped_sexes
 
-    for data in all_data:
-        for block in data.blocks:
-            if ACOLE.LEITURA.id == block.id:
-                leitura.append(block)
-            elif ACOLE.DITADO_COMPOSICAO.id == block.id:
-                ditado_composicao.append(block)
-            elif ACOLE.DITADO_MANUSCRITO.id == block.id:
-                ditado_manuscrito.append(block)
-            elif ACOLE.LEITURA_DIFICULDADES.id == block.id:
-                leitura_dificuldades.append(block)
-            elif ACOLE.DITADO_COMPOSICAO_DIFICULDADES.id == block.id:
-                ditado_composicao_dificuldades.append(block)
-            elif ACOLE.DITADO_MANUSCRITO_DIFICULDADES.id == block.id:
-                ditado_manuscrito_dificuldades.append(block)
+        grouped_ages = [[7, 8, 9], [10], [11], [12, 13, 14, 15, 19]]
 
-    # Group 1 - Regular Blocks
-    normal_blocks = [
-        leitura,
-        ditado_composicao,
-        ditado_manuscrito]
+        all_data = [ACOLE_by_module.by_age(ages) for ages in grouped_ages]
 
-    # Group 2 - Difficult Blocks
-    difficult_blocks = [
-        leitura_dificuldades,
-        ditado_composicao_dificuldades,
-        ditado_manuscrito_dificuldades]
+        leitura = []
+        ditado_composicao = []
+        ditado_manuscrito = []
+        leitura_dificuldades = []
+        ditado_composicao_dificuldades = []
+        ditado_manuscrito_dificuldades = []
 
-    plot_blocks(axs[0], normal_blocks, 'Palavras regulares')
+        for data in all_data:
+            for block in data.blocks:
+                if ACOLE.LEITURA.id == block.id:
+                    leitura.append(block)
+                elif ACOLE.DITADO_COMPOSICAO.id == block.id:
+                    ditado_composicao.append(block)
+                elif ACOLE.DITADO_MANUSCRITO.id == block.id:
+                    ditado_manuscrito.append(block)
+                elif ACOLE.LEITURA_DIFICULDADES.id == block.id:
+                    leitura_dificuldades.append(block)
+                elif ACOLE.DITADO_COMPOSICAO_DIFICULDADES.id == block.id:
+                    ditado_composicao_dificuldades.append(block)
+                elif ACOLE.DITADO_MANUSCRITO_DIFICULDADES.id == block.id:
+                    ditado_manuscrito_dificuldades.append(block)
 
-    plot_blocks(axs[1], difficult_blocks, 'Palavras com\ndificuldades ortográficas')
+        # Group 1 - Regular Blocks
+        normal_blocks = [
+            leitura,
+            ditado_composicao,
+            ditado_manuscrito]
 
-    handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.0), ncol=len(grouped_ages))
+        # Group 2 - Difficult Blocks
+        difficult_blocks = [
+            leitura_dificuldades,
+            ditado_composicao_dificuldades,
+            ditado_manuscrito_dificuldades]
+
+        if i == 0:
+            plot_blocks(axs[i, 0], normal_blocks, top_label[i])
+            plot_blocks(axs[i, 1], difficult_blocks, top_label[i+1])
+        else:
+            plot_blocks(axs[i, 0], normal_blocks, '')
+            plot_blocks(axs[i, 1], difficult_blocks, '')
+
+    handles, labels = axs[1, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.020), ncol=len(grouped_ages))
+
+    fig.text(0.5, 0.90,
+        m1.forwarding, ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
+
+    fig.text(0.5, 0.50,
+        m2.forwarding, ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
+
+    fig.text(0.5, 0.34,
+        m3.forwarding, ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
+
+    x_pos = .8
+    y_pos = .87
+    fig.text(x_pos, y_pos, '1 = média', ha='left', color='black')
+    fig.text(x_pos, y_pos - 0.020, '2 = mediana', ha='left', color='black')
+    fig.text(x_pos, y_pos - 0.040, '3 = desvio padrão', ha='left', color='black')
+    fig.text(x_pos, y_pos - 0.060, '4 = tamanho da amostra', ha='left', color='black')
 
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figures', 'Fig18.png'), bbox_inches='tight')
+    plt.savefig(os.path.join(base_dir, 'figures', 'Fig20.png'), bbox_inches='tight')
 
 if __name__ == "__main__":
-    if ACOLE.cache_exists():
-        print('Loading from cache')
-        ACOLE = ACOLE.load_from_file()
-    else:
-        print('Populating cache')
-        populate_acole_data()
-        ACOLE.save_to_file()
-
     bar_plot_regular_difficult_groups(ACOLE)

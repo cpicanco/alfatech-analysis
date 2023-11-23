@@ -5,14 +5,32 @@ import re
 from collections import Counter
 
 from .methods import age
-# from methods import age
 
 class Student:
-    def __init__(self, **kwargs):
-        self.name = None
-        self.id = None
-        self.age = None
-        self.birthdate = None
+    def __init__(self, student_data=None, forwarding_trial_id=None):
+        forwarding_module = {
+            32216 : 'Módulo 1',
+            33048 : 'Módulo 2',
+            33049 : 'Módulo 3'
+        }
+
+        if student_data == None:
+            self.name = None
+            self.id = None
+            self.age = None
+            self.birthdate = None
+            self.sex = None
+        else:
+            self.name = student_data.FULLNAME
+            self.id = student_data.ID
+            self.age = age(student_data.BIRTHDATE)
+            self.birthdate = student_data.BIRTHDATE
+            self.sex = student_data.SEX
+
+        if forwarding_trial_id is None:
+            self.forwarding = None
+        else:
+            self.forwarding = forwarding_module[forwarding_trial_id]
 
 class Block:
     def __init__(self, id, legend, code, min_trials):
@@ -24,7 +42,7 @@ class Block:
                       'trials': [],
                       'percentages': []}
         self.age_group = None
-        self.module = None
+        self.forwarding = None
         self.sex = None
 
 class Container:
@@ -36,7 +54,7 @@ class Container:
                 self.blocks.append(value)
         self.id = None
         self.age_group = None
-        self.module = None
+        self.forwarding = None
         self.sex = None
 
     @classmethod
@@ -76,10 +94,9 @@ class ACOLE_Container(Container):
         super(ACOLE_Container, self).__init__(**kwargs)
         self.id = 372
         self.age_group = None
-        self.module = None
+        self.forwarding = None
         self.sex = None
 
-    # return a copy of self.data with male students only
     def _student_filter(self, filter_function):
         filtered_ACOLE = ACOLE_Container()
         for block, block_filtered in zip(self.blocks, filtered_ACOLE.blocks):
@@ -102,13 +119,30 @@ class ACOLE_Container(Container):
         for block in self.blocks:
             for student in block.data['students']:
                 if student is not None and filter_function(student):
-                    p = Student()
-                    p.id = student.ID
-                    p.name = self.student_fullname(student)
-                    p.birthdate = student.BIRTHDATE
-                    p.age = age(student.BIRTHDATE)
-                    p.sex = student.SEX
-                    yield p
+                    yield student
+
+    def summary(self):
+        print('Summary:')
+        print('\nModules:')
+        for module, count in self.modules(count=True).items():
+            print(f'{module}: {count} data points')
+
+        print('\nAges:')
+        for age, count in self.ages(count=True).items():
+            print(f'{age}: {count} data points')
+
+        print('\nSexes:')
+        for sex, count in self.sexes(count=True).items():
+            print(f'{sex}: {count} data points')
+
+    def modules(self, count=False):
+        modules = []
+        for student in self.students():
+            modules.append(student.forwarding if student.forwarding is not None else 'None')
+        if count:
+            return dict(sorted(Counter(modules).items()))
+        else:
+            return modules
 
     def ages(self, count=False):
         ages = []
@@ -131,8 +165,8 @@ class ACOLE_Container(Container):
     def by_sex(self, sex):
         allowed_sexes = ['M', 'F']
         filter_function = {
-            'M': lambda student: student.SEX == 'M',
-            'F': lambda student: student.SEX == 'F'}
+            'M': lambda student: student.sex == 'M',
+            'F': lambda student: student.sex == 'F'}
 
         if sex in allowed_sexes:
             filtered = self._student_filter(filter_function[sex])
@@ -140,27 +174,27 @@ class ACOLE_Container(Container):
             for block in filtered.blocks:
                 block.sex = sex
                 block.age_group = self.age_group
-                block.module = self.module
+                block.forwarding = self.forwarding
             return filtered
         else:
             raise ValueError("Invalid sex value. Accepted values are 'M' or 'F'.")
 
     def by_age(self, ages_array):
-        filter_function = lambda student: age(student.BIRTHDATE) in ages_array
+        filter_function = lambda student: student.age in ages_array
         filtered = self._student_filter(filter_function)
         filtered.age_group = ages_array
         for block in filtered.blocks:
             block.age_group = ages_array
-            block.module = self.module
+            block.forwarding = self.forwarding
             block.sex = self.sex
         return filtered
 
-    def by_forward_module_id(self, module):
-        filter_function = lambda student: student.MODULE == module
+    def by_forwarding(self, forwarding_id):
+        filter_function = lambda student: student.forwarding == forwarding_id
         filtered = self._student_filter(filter_function)
-        filtered.module = module
+        filtered.module = forwarding_id
         for block in filtered.blocks:
-            block.module = module
+            block.forwarding = forwarding_id
             block.sex = self.sex
             block.age_group = self.age_group
         return filtered
@@ -168,8 +202,3 @@ class ACOLE_Container(Container):
     @classmethod
     def filename(cls):
         return os.path.join('cache', f'{cls.__name__}.pkl')
-
-if __name__ == "__main__":
-    ACOLE = ACOLE_Container()
-    for block in ACOLE.blocks:
-        print(block.id, block.data)
