@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # database
-from databases import geic_db, ACOLE, populate_acole_data
+from databases import ACOLE
 from methods import statistics_from_block
 
 def plot_blocks(ax, grouped_data, title):
@@ -68,7 +68,7 @@ def bar_plot_regular_difficult_groups(ACOLE):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(14, 7)
     fig.set_dpi(100)
-    fig.suptitle('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade')
+    fig.suptitle('Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade')
 
     # 7: 3 data points
     # 8: 111 data points

@@ -10,7 +10,7 @@ sys.path.append(os.path.join(base_dir))
 import matplotlib.pyplot as plt
 import numpy as np
 
-from databases import geic_db, ACOLE, populate_acole_data
+from databases import ACOLE
 from methods import statistics_from_blocks
 
 def boxplot_blocks(ax, blocks, title):
@@ -74,7 +74,7 @@ def bar_plot_regular_difficult_groups(ACOLE):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(8, 5)
     fig.set_dpi(100)
-    fig.suptitle('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas')
+    fig.suptitle('Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas')
 
     # Group 1 - Regular Blocks
     normal_blocks = [

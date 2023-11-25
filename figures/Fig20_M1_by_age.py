@@ -10,7 +10,7 @@ sys.path.append(os.path.join(base_dir))
 import matplotlib.pyplot as plt
 import numpy as np
 
-from databases import geic_db, ACOLE, populate_acole_data
+from databases import ACOLE
 from methods import statistics_from_block
 
 def plot_blocks(ax, grouped_data, title):
@@ -68,7 +68,7 @@ def bar_plot_regular_difficult_groups(ACOLE):
     fig, axs = plt.subplots(3, 2, sharey=True)
     fig.set_size_inches(12, 18)
     fig.set_dpi(100)
-    fig.suptitle('Média da porcentagem de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade e sexo')
+    fig.suptitle('Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas,\n por idade e encaminhamento')
 
     top_label = ['Palavras regulares', 'Palavras com\ndificuldades ortográficas']
 
@@ -128,13 +128,13 @@ def bar_plot_regular_difficult_groups(ACOLE):
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.020), ncol=len(grouped_ages))
 
     fig.text(0.5, 0.90,
-        m1.forwarding, ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
+        'Módulo 1', ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
 
-    fig.text(0.5, 0.50,
-        m2.forwarding, ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
+    fig.text(0.5, 0.62,
+        'Módulo 2', ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
 
-    fig.text(0.5, 0.34,
-        m3.forwarding, ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
+    fig.text(0.5, 0.32,
+        'Módulo 3', ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
 
     x_pos = .8
     y_pos = .87
