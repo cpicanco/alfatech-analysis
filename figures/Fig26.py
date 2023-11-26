@@ -47,7 +47,7 @@ def plot_blocks(ax, blocks, title):
 
     bar_values, bar_stds, bar_lengths, bar_medians, mins, maxs = statistics_from_blocks(blocks, 'sessions')
 
-    ax.set_ylim(0, 3)
+    ax.set_ylim(0, 4)
     ax.set_title(title)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -66,7 +66,7 @@ def bar_plot(MODULE1):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(12, 5)
     fig.set_dpi(100)
-    fig.suptitle('Número médio de sessões dos passos do módulo 1\ncompleto e incompleto')
+    fig.suptitle('Número médio de sessões dos passos do módulo 3\ncompleto e incompleto')
 
 
     complete = [block for block in MODULE1.by_completion(True).blocks if block.min_trials < 0]
@@ -76,27 +76,28 @@ def bar_plot(MODULE1):
         x_pos = p
         y_pos = v + 0.4
         axs[0].text(x_pos, y_pos, f'{_max}', ha='center', color='black', fontsize=8)
-        axs[0].text(x_pos, y_pos - 0.15, f'{_min}', ha='center', color='black', fontsize=8)
+        axs[0].text(x_pos, y_pos - 0.2, f'{_min}', ha='center', color='black', fontsize=8)
 
-    axs[0].text(10, 2.8, f'n = {bar_lengths[0]}', ha='center', color='black', fontsize=10)
+    axs[0].text(10, 3.8, f'n = {bar_lengths[0]}', ha='center', color='black', fontsize=10)
     axs[0].annotate(f'= máx', (x_pos+1, y_pos), ha='center', color='black', fontsize=8)
-    axs[0].annotate(f'= mín', (x_pos+1, y_pos -0.15), ha='center', color='black', fontsize=8)
+    axs[0].annotate(f'= mín', (x_pos+1, y_pos -0.2), ha='center', color='black', fontsize=8)
 
     incomplete = [block for block in MODULE1.by_completion(False).blocks if block.min_trials < 0]
     bars, bar_values, bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[1], incomplete, 'Incompleto')
     for b, v, p, _len, _max, _min in zip(bars, bar_values, bar_positions, bar_lengths, maxs, mins):
-        x_pos = p
-        y_pos = v + 0.4
-        axs[1].text(x_pos, 2.8, f'{_len}', ha='center', color='black', fontsize=8)
-        axs[1].text(x_pos, y_pos - 0.15, f'{_max}', ha='center', color='black', fontsize=8)
-        axs[1].text(x_pos, y_pos - 0.3, f'{_min}', ha='center', color='black', fontsize=8)
+        if p is not None:
+            x_pos = p
+            y_pos = v + 0.6
+            axs[1].text(x_pos, 3.8, f'{_len}', ha='center', color='black', fontsize=8)
+            axs[1].text(x_pos, y_pos - 0.2, f'{_max}', ha='center', color='black', fontsize=8)
+            axs[1].text(x_pos, y_pos - 0.4, f'{_min}', ha='center', color='black', fontsize=8)
 
-    axs[1].text(x_pos+1, 2.8, f'= n ', ha='center', color='black', fontsize=10)
-    axs[1].annotate(f'= máx', (x_pos+1, y_pos -0.15), ha='center', color='black', fontsize=8)
-    axs[1].annotate(f'= mín', (x_pos+1, y_pos -0.3), ha='center', color='black', fontsize=8)
+    axs[1].text(x_pos+1, 3.8, f'= n ', ha='center', color='black', fontsize=10)
+    axs[1].annotate(f'= máx', (x_pos+1, y_pos -0.2), ha='center', color='black', fontsize=8)
+    axs[1].annotate(f'= mín', (x_pos+1, y_pos -0.4), ha='center', color='black', fontsize=8)
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figures', 'Fig24.png'), bbox_inches='tight')
+    plt.savefig(os.path.join(base_dir, 'figures', 'Fig26.png'), bbox_inches='tight')
 
 if __name__ == "__main__":
-    # bar_plot(MODULE3)
-    MODULE3.summary()
+    bar_plot(MODULE3)
+    # MODULE3.summary()

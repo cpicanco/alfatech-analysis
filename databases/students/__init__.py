@@ -104,4 +104,6 @@ else:
     with geic_db.connect() as connection:
         students_template = template_from_name('students_from_alphatech')
         students.populate(connection.execute(text(students_template)).fetchall(), correct_school_years)
+
+def cache_students():
     students.save_to_file()

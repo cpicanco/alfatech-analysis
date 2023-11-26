@@ -61,7 +61,7 @@ class Container(Base_Container):
                     yield student
 
     def summary(self):
-        print('Summary:')
+        print('\n\nSummary:'+ self.__class__.__name__)
         print('\nCompleted Modules:')
         for completed, count in self.completions(count=True).items():
             print(f'{completed}: {count} data points')
@@ -194,12 +194,17 @@ class ACOLE_Container(Container):
 
         self.id = 372
 
+class ACOLE1_Container(ACOLE_Container):
     def _student_filter(self, filter_function):
-        return self._filter(filter_function, ACOLE_Container())
+        return self._filter(filter_function, ACOLE1_Container())
 
-    @classmethod
-    def filename(cls):
-        return os.path.join('cache', f'{cls.__name__}.pkl')
+class ACOLE2_Container(ACOLE_Container):
+    def _student_filter(self, filter_function):
+        return self._filter(filter_function, ACOLE2_Container())
+
+class ACOLE3_Container(ACOLE_Container):
+    def _student_filter(self, filter_function):
+        return self._filter(filter_function, ACOLE2_Container())
 
 class MODULE1_Container(Container):
     def __init__(self, **kwargs):
@@ -245,9 +250,6 @@ class MODULE1_Container(Container):
     def by_completion(self, completed):
         return self.by_module_completion(1, completed)
 
-    @classmethod
-    def filename(cls):
-        return os.path.join('cache', f'{cls.__name__}.pkl')
 
 class MODULE2_Container(Container):
     def __init__(self, **kwargs):
@@ -367,9 +369,6 @@ class MODULE2_Container(Container):
     def by_completion(self, completed):
         return self.by_module_completion(2, completed)
 
-    @classmethod
-    def filename(cls):
-        return os.path.join('cache', f'{cls.__name__}.pkl')
 
 class MODULE3_Container(Container):
     def __init__(self, **kwargs):
@@ -417,7 +416,3 @@ class MODULE3_Container(Container):
 
     def by_completion(self, completed):
         return self.by_module_completion(3, completed)
-
-    @classmethod
-    def filename(cls):
-        return os.path.join('cache', f'{cls.__name__}.pkl')

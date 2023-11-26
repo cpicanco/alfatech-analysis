@@ -9,7 +9,7 @@ class Base_Container(ABC):
 
     @classmethod
     def filename(cls):
-        pass
+        return f'cache/{cls.__name__}.pkl'
 
     def save_to_file(self):
         os.makedirs('cache', exist_ok=True)

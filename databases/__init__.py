@@ -12,9 +12,11 @@ import datetime
 from sqlalchemy import text
 
 from .engine import geic_db
-from .students import students
+from .students import students, cache_students
 from .queries import template_from_name
-from .containers import ACOLE_Container, MODULE1_Container, MODULE2_Container, MODULE3_Container
+
+from .containers import ACOLE1_Container,  ACOLE2_Container,  ACOLE3_Container
+from .containers import MODULE1_Container, MODULE2_Container, MODULE3_Container
 
 def get_trials(trials_data):
     if trials_data == []:
@@ -114,7 +116,7 @@ def complete_module_from_student(connection, student_id, module_id):
 
 
 
-def populate_acole_data(ACOLE):
+def populate_acole_data(ACOLE, registration_index=0):
     with open(ACOLE.filename()+'.tsv', 'w', encoding='utf-8') as file:
         file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS']) + '\n')
         # populate ACOLE data
@@ -123,9 +125,10 @@ def populate_acole_data(ACOLE):
                 # get oldest program's registration
                 acole_registration = get_registration(connection, ACOLE.id, student.id)
 
-                if acole_registration == []:
+                if registration_index >= len(acole_registration):
                     continue
-                acole_registration_id = acole_registration[0][0]
+
+                acole_registration_id = acole_registration[registration_index][0]
 
                 student.forward_to(get_forwarding_trial(connection, acole_registration_id, ACOLE.id, student.id))
 
@@ -220,38 +223,80 @@ def populate_module_data(MODULE):
                     # print(info)
                     file.write(info + '\n')
 
-if ACOLE_Container.cache_exists():
-    print('Loading ACOLE from cache')
-    ACOLE = ACOLE_Container.load_from_file()
-else:
-    print('Populating ACOLE cache')
-    ACOLE = ACOLE_Container()
-    populate_acole_data(ACOLE)
-    ACOLE.save_to_file()
+ACOLE1 = ACOLE1_Container()
+ACOLE2 = ACOLE2_Container()
+ACOLE3 = ACOLE3_Container()
+MODULE1 = MODULE1_Container()
+MODULE2 = MODULE2_Container()
+MODULE3 = MODULE3_Container()
 
-if MODULE1_Container.cache_exists():
-    print('Loading MODULE 1 from cache')
-    MODULE1 = MODULE1_Container.load_from_file()
-else:
-    print('Populating MODULE 1 cache')
-    MODULE1 = MODULE1_Container()
-    populate_module_data(MODULE1)
-    MODULE1.save_to_file()
+for i, ACOLE in enumerate([ACOLE1, ACOLE2, ACOLE3]):
+    if ACOLE.cache_exists():
+        print(f'Loading ACOLE {i + 1} from cache')
+        if i == 0:
+            ACOLE1 = ACOLE.load_from_file()
+        elif i == 1:
+            ACOLE2 = ACOLE.load_from_file()
+        elif i == 2:
+            ACOLE3 = ACOLE.load_from_file()
 
-if MODULE2_Container.cache_exists():
-    print('Loading MODULE 2 from cache')
-    MODULE2 = MODULE2_Container.load_from_file()
-else:
-    print('Populating MODULE 2 cache')
-    MODULE2 = MODULE2_Container()
-    populate_module_data(MODULE2)
-    MODULE2.save_to_file()
+    else:
+        print(f'Populating ACOLE {i + 1} cache')
+        if i == 0:
+            populate_acole_data(ACOLE1, i)
+        elif i == 1:
+            populate_acole_data(ACOLE2, i)
+        elif i == 2:
+            populate_acole_data(ACOLE3, i)
 
-if MODULE3_Container.cache_exists():
-    print('Loading MODULE 3 from cache')
-    MODULE3 = MODULE3_Container.load_from_file()
-else:
-    print('Populating MODULE 3 cache')
-    MODULE3 = MODULE3_Container()
-    populate_module_data(MODULE3)
-    MODULE3.save_to_file()
+for i, MODULE in enumerate([MODULE1, MODULE2, MODULE3]):
+    if MODULE.cache_exists():
+        print(f'Loading MODULE {i+1} ({MODULE.id}) from cache')
+        if i == 0:
+            MODULE1 = MODULE.load_from_file()
+        elif i == 1:
+            MODULE2 = MODULE.load_from_file()
+        elif i == 2:
+            MODULE3 = MODULE.load_from_file()
+    else:
+        print(f'Populating MODULE {i+1} ({MODULE.id}) cache')
+        if i == 0:
+            populate_module_data(MODULE1)
+        elif i == 1:
+            populate_module_data(MODULE2)
+        elif i == 2:
+            populate_module_data(MODULE3)
+            ACOLE1.save_to_file()
+            ACOLE2.save_to_file()
+            ACOLE3.save_to_file()
+            MODULE1.save_to_file()
+            MODULE2.save_to_file()
+            MODULE3.save_to_file()
+            cache_students()
+
+# if MODULE1_Container.cache_exists():
+#     print('Loading MODULE 1 from cache')
+#     MODULE1 = MODULE1_Container.load_from_file()
+# else:
+#     print('Populating MODULE 1 cache')
+#     MODULE1 = MODULE1_Container()
+#     populate_module_data(MODULE1)
+#     MODULE1.save_to_file()
+
+# if MODULE2_Container.cache_exists():
+#     print('Loading MODULE 2 from cache')
+#     MODULE2 = MODULE2_Container.load_from_file()
+# else:
+#     print('Populating MODULE 2 cache')
+#     MODULE2 = MODULE2_Container()
+#     populate_module_data(MODULE2)
+#     MODULE2.save_to_file()
+
+# if MODULE3_Container.cache_exists():
+#     print('Loading MODULE 3 from cache')
+#     MODULE3 = MODULE3_Container.load_from_file()
+# else:
+#     print('Populating MODULE 3 cache')
+#     MODULE3 = MODULE3_Container()
+#     populate_module_data(MODULE3)
+#     MODULE3.save_to_file()
