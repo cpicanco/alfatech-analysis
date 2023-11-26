@@ -131,14 +131,17 @@ def populate_acole_data(ACOLE, registration_index=0):
                 acole_registration_id = acole_registration[registration_index][0]
 
                 student.forward_to(get_forwarding_trial(connection, acole_registration_id, ACOLE.id, student.id))
-
-                for block in ACOLE.blocks:
+                student.acoles.append(ACOLE.create())
+                for block, student_block in zip(ACOLE.blocks, student.acoles[-1].blocks):
                     (trials, trials_len, percentage, date) = get_block_trials(connection, acole_registration_id, ACOLE.id, block.id, student.id)
                     trials_len = len(trials)
                     if trials_len > 0:
                         block.data['students'].append(student)
                         block.data['trials'].append(trials)
                         block.data['percentages'].append(percentage)
+                        student_block.data['students'].append(student)
+                        student_block.data['trials'].append(trials)
+                        student_block.data['percentages'].append(percentage)
                     else:
                         percentage = None
                         trials_len = None
@@ -174,8 +177,8 @@ def populate_module_data(MODULE):
                         student.set_completion(MODULE.id, complete_module_from_student(connection, student.id, MODULE.id))
                         target_registrations = [r for r in incomplete_registrations]
 
-                # get forward trials for student
-                for block in MODULE.blocks:
+                student.modules.append(MODULE.create())
+                for block, student_block in zip(MODULE.blocks, student.modules[-1].blocks):
                     if len(target_registrations) == 1:
                         rid = target_registrations[0]
                         sessions = get_step_sessions(connection, rid, MODULE.id, block.id, student.id)
@@ -204,6 +207,10 @@ def populate_module_data(MODULE):
                         block.data['students'].append(student)
                         block.data['trials'].append(trials)
                         block.data['percentages'].append(percentage)
+                        block.data['sessions'].append(sessions)
+                        student_block.data['students'].append(student)
+                        student_block.data['trials'].append(trials)
+                        student_block.data['percentages'].append(percentage)
                         block.data['sessions'].append(sessions)
                     else:
                         percentage = None
@@ -273,30 +280,3 @@ for i, MODULE in enumerate([MODULE1, MODULE2, MODULE3]):
             MODULE2.save_to_file()
             MODULE3.save_to_file()
             cache_students()
-
-# if MODULE1_Container.cache_exists():
-#     print('Loading MODULE 1 from cache')
-#     MODULE1 = MODULE1_Container.load_from_file()
-# else:
-#     print('Populating MODULE 1 cache')
-#     MODULE1 = MODULE1_Container()
-#     populate_module_data(MODULE1)
-#     MODULE1.save_to_file()
-
-# if MODULE2_Container.cache_exists():
-#     print('Loading MODULE 2 from cache')
-#     MODULE2 = MODULE2_Container.load_from_file()
-# else:
-#     print('Populating MODULE 2 cache')
-#     MODULE2 = MODULE2_Container()
-#     populate_module_data(MODULE2)
-#     MODULE2.save_to_file()
-
-# if MODULE3_Container.cache_exists():
-#     print('Loading MODULE 3 from cache')
-#     MODULE3 = MODULE3_Container.load_from_file()
-# else:
-#     print('Populating MODULE 3 cache')
-#     MODULE3 = MODULE3_Container()
-#     populate_module_data(MODULE3)
-#     MODULE3.save_to_file()

@@ -99,4 +99,3 @@ def bar_plot(MODULE):
 
 if __name__ == "__main__":
     bar_plot(MODULE2)
-    # MODULE2.summary()

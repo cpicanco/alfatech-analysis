@@ -1,6 +1,7 @@
 import os
 import csv
 
+from collections import Counter
 from sqlalchemy import text
 
 from ..methods import age
@@ -28,6 +29,9 @@ class Student:
         self.has_m1 = None
         self.has_m2 = None
         self.has_m3 = None
+        self.acoles = []
+        self.modules = []
+
         if student_data is None:
             self.name = None
             self.id = None
@@ -52,6 +56,8 @@ class Student:
         self.forwarding = self.forwarding_modules[module_id]
 
     def set_completion(self, module_id, completion):
+        if completion is None:
+            raise ValueError('Completion cannot be None')
         if module_id == MODULO1_ID:
             self.has_m1 = completion
         elif module_id == MODULO2_ID:
@@ -93,6 +99,76 @@ class Students_Container(Base_Container):
 
     def _student_filter(self, filter_function):
         return [student for student in self.__students if filter_function(student)]
+
+    def summary(self):
+        print('\n\nSummary:'+ self.__class__.__name__)
+        print('\nCompleted Modules:')
+        print(f'Total de alunos: {len(self)}')
+        print(f'Com Módulo 1 completo: {len(self._student_filter(lambda student: student.has_m1 == True))}')
+        print(f'Com Módulo 1 incompleto: {len(self._student_filter(lambda student: student.has_m1 == False))}')
+        print(f'Com Módulo 1 desconhecido: {len(self._student_filter(lambda student: student.has_m1 is None))}')
+        print(f'Com Módulo 2 completo: {len(self._student_filter(lambda student: student.has_m2 == True))}')
+        print(f'Com Módulo 2 incompleto: {len(self._student_filter(lambda student: student.has_m2 == False))}')
+        print(f'Com Módulo 2 desconhecido: {len(self._student_filter(lambda student: student.has_m2 is None))}')
+        print(f'Com Módulo 3 completo: {len(self._student_filter(lambda student: student.has_m3 == True))}')
+        print(f'Com Módulo 3 incompleto: {len(self._student_filter(lambda student: student.has_m3 == False))}')
+        print(f'Com Módulo 3 desconhecido: {len(self._student_filter(lambda student: student.has_m3 is None))}')
+        print(f'Com Módulo 1 e 2 completo: {len(self._student_filter(lambda student: student.has_m1 and student.has_m2))}')
+        print(f'Com Módulo 1 e 2 incompleto: {len(self._student_filter(lambda student: student.has_m1 == False and student.has_m2 == False))}')
+        print(f'Com Módulo 1 e 2 desconhecido: {len(self._student_filter(lambda student: student.has_m1 is None and student.has_m2 is None))}')
+        print(f'Com Módulo 1 e 3 completo: {len(self._student_filter(lambda student: student.has_m1 and student.has_m3))}')
+        print(f'Com Módulo 1 e 3 incompleto: {len(self._student_filter(lambda student: student.has_m1 == False and student.has_m3 == False))}')
+        print(f'Com Módulo 1 e 3 desconhecido: {len(self._student_filter(lambda student: student.has_m1 is None and student.has_m3 is None))}')
+        print(f'Com Módulo 2 e 3 completo: {len(self._student_filter(lambda student: student.has_m2 and student.has_m3))}')
+        print(f'Com Módulo 2 e 3 incompleto: {len(self._student_filter(lambda student: student.has_m2 == False and student.has_m3 == False))}')
+        print(f'Com Módulo 2 e 3 desconhecido: {len(self._student_filter(lambda student: student.has_m2 is None and student.has_m3 is None))}')
+        print(f'Com Módulo 1, 2, e 3 completo: {len(self._student_filter(lambda student: student.has_m1 and student.has_m2 and student.has_m3))}')
+        print(f'Com Módulo 1, 2, e 3 incompleto: {len(self._student_filter(lambda student: student.has_m1 == False and student.has_m2 == False and student.has_m3 == False))}')
+        print(f'Com Módulo 1, 2, e 3 desconhecido: {len(self._student_filter(lambda student: student.has_m1 is None and student.has_m2 is None and student.has_m3 is None))}')
+
+        print('\nModule Forwarding:')
+        for module, count in self.forwardings(count=True).items():
+            print(f'{module}: {count}')
+
+        print('\nAges:')
+        for age, count in self.ages(count=True).items():
+            print(f'{age}: {count}')
+
+        print('\nSexes:')
+        for sex, count in self.sexes(count=True).items():
+            print(f'{sex}: {count}')
+
+        print('\nSchool Years:')
+        for school_year, count in self.school_years(count=True).items():
+            print(f'{school_year}: {count}')
+
+    def forwardings(self, count=False):
+        forwardings = [student.forwarding if student.forwarding is not None else 'None' for student in self.items()]
+        if count:
+            return dict(sorted(Counter(forwardings).items()))
+        else:
+            return modules
+
+    def ages(self, count=False):
+        ages = [student.age for student in self.items()]
+        if count:
+            return dict(sorted(Counter(ages).items()))
+        else:
+            return ages
+
+    def sexes(self, count=False):
+        sexes = [student.sex for student in self.items()]
+        if count:
+            return dict(sorted(Counter(sexes).items()))
+        else:
+            return sexes
+
+    def school_years(self, count=False):
+        school_years = [student.school_year for student in self.items()]
+        if count:
+            return dict(sorted(Counter(school_years).items()))
+        else:
+            return school_years
 
 if Students_Container.cache_exists():
     print('Loading Students from cache')

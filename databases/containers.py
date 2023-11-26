@@ -62,6 +62,11 @@ class Container(Base_Container):
 
     def summary(self):
         print('\n\nSummary:'+ self.__class__.__name__)
+
+        print('\nStudents: ')
+        for block in self.blocks:
+            print(f'{block.legend}: {len([s for s in block.data["students"] if s is not None])}')
+
         print('\nCompleted Modules:')
         for completed, count in self.completions(count=True).items():
             print(f'{completed}: {count} data points')
@@ -134,6 +139,15 @@ class Container(Base_Container):
         else:
             return sexes
 
+    def school_years(self, count=False):
+        school_years = []
+        for student in self.students():
+            school_years.append(student.school_year)
+        if count:
+            return dict(sorted(Counter(school_years).items()))
+        else:
+            return school_years
+
     def by_sex(self, sex):
         allowed_sexes = ['M', 'F']
         filter_function = {
@@ -163,6 +177,14 @@ class Container(Base_Container):
         filtered.module = forwarding_id
         for block in filtered.blocks:
             block.forwarding = forwarding_id
+        return filtered
+
+    def by_school_year(self, school_year):
+        filter_function = lambda student: student.school_year == school_year
+        filtered = self._student_filter(filter_function)
+        filtered.school_year = school_year
+        for block in filtered.blocks:
+            block.school_year = school_year
         return filtered
 
     def by_module_completion(self, module, completed):
@@ -204,7 +226,7 @@ class ACOLE2_Container(ACOLE_Container):
 
 class ACOLE3_Container(ACOLE_Container):
     def _student_filter(self, filter_function):
-        return self._filter(filter_function, ACOLE2_Container())
+        return self._filter(filter_function, ACOLE3_Container())
 
 class MODULE1_Container(Container):
     def __init__(self, **kwargs):
@@ -335,27 +357,27 @@ class MODULE2_Container(Container):
             'PASSO_78' : Block(2369, 'Passo 2 (GUE-GUI)', '', -1),
             'PASSO_79' : Block(2370, 'Passo 3 (GUE-GUI)', '', -1),
             'PASSO_80' : Block(2371, 'Passo 4 (GUE-GUI)', '', -1),
-            'DITADO_COMPOSICAO_01' : Block(2049, 'Passo 1', 'AE', 0),
-            'DITADO_COMPOSICAO_02' : Block(2051, 'Passo 2', 'AE', 0),
-            'DITADO_COMPOSICAO_03' : Block(3809, 'Passo 3', 'AE', 0),
-            'DITADO_COMPOSICAO_04' : Block(5089, 'Passo 4', 'AE', 0),
-            'DITADO_COMPOSICAO_05' : Block(2057, 'Passo 5', 'AE', 0),
-            'DITADO_COMPOSICAO_06' : Block(2059, 'Passo 6', 'AE', 0),
-            'DITADO_COMPOSICAO_07' : Block(2061, 'Passo 7', 'AE', 0),
-            'DITADO_COMPOSICAO_08' : Block(2063, 'Passo 8', 'AE', 0),
-            'DITADO_COMPOSICAO_09' : Block(2066, 'Passo 9', 'AE', 0),
-            'DITADO_COMPOSICAO_10' : Block(3811, 'Passo 10', 'AE', 0),
-            'DITADO_COMPOSICAO_11' : Block(2071, 'Passo 11', 'AE', 0),
-            'DITADO_COMPOSICAO_12' : Block(5090, 'Passo 12', 'AE', 0),
-            'DITADO_COMPOSICAO_13' : Block(5092, 'Passo 13', 'AE', 0),
-            'DITADO_COMPOSICAO_14' : Block(5093, 'Passo 14', 'AE', 0),
-            'DITADO_COMPOSICAO_15' : Block(5094, 'Passo 15', 'AE', 0),
-            'DITADO_COMPOSICAO_16' : Block(5095, 'Passo 16', 'AE', 0),
-            'DITADO_COMPOSICAO_17' : Block(5096, 'Passo 17', 'AE', 0),
-            'DITADO_COMPOSICAO_18' : Block(3570, 'Passo 18', 'AE', 0),
-            'DITADO_COMPOSICAO_19' : Block(3571, 'Passo 19', 'AE', 0),
-            'DITADO_COMPOSICAO_20' : Block(3572, 'Passo 20', 'AE', 0),
-            'DITADO_COMPOSICAO_21' : Block(3573, 'Passo 21', 'AE', 0)}
+            'DITADO_COMPOSICAO_01' : Block(2049, 'MLEG 1', 'AE', 0),
+            'DITADO_COMPOSICAO_02' : Block(2051, 'MLEG 2', 'AE', 0),
+            'DITADO_COMPOSICAO_03' : Block(3809, 'MLEG 3', 'AE', 0),
+            'DITADO_COMPOSICAO_04' : Block(5089, 'MLEG 4', 'AE', 0),
+            'DITADO_COMPOSICAO_05' : Block(2057, 'MLEG 5', 'AE', 0),
+            'DITADO_COMPOSICAO_06' : Block(2059, 'MLEG 6', 'AE', 0),
+            'DITADO_COMPOSICAO_07' : Block(2061, 'MLEG 7', 'AE', 0),
+            'DITADO_COMPOSICAO_08' : Block(2063, 'MLEG 8', 'AE', 0),
+            'DITADO_COMPOSICAO_09' : Block(2066, 'MLEG 9', 'AE', 0),
+            'DITADO_COMPOSICAO_10' : Block(3811, 'MLEG 10', 'AE', 0),
+            'DITADO_COMPOSICAO_11' : Block(2071, 'MLEG 11', 'AE', 0),
+            'DITADO_COMPOSICAO_12' : Block(5090, 'MLEG 12', 'AE', 0),
+            'DITADO_COMPOSICAO_13' : Block(5092, 'MLEG 13', 'AE', 0),
+            'DITADO_COMPOSICAO_14' : Block(5093, 'MLEG 14', 'AE', 0),
+            'DITADO_COMPOSICAO_15' : Block(5094, 'MLEG 15', 'AE', 0),
+            'DITADO_COMPOSICAO_16' : Block(5095, 'MLEG 16', 'AE', 0),
+            'DITADO_COMPOSICAO_17' : Block(5096, 'MLEG 17', 'AE', 0),
+            'DITADO_COMPOSICAO_18' : Block(3570, 'MLEG 18', 'AE', 0),
+            'DITADO_COMPOSICAO_19' : Block(3571, 'MLEG 19', 'AE', 0),
+            'DITADO_COMPOSICAO_20' : Block(3572, 'MLEG 20', 'AE', 0),
+            'DITADO_COMPOSICAO_21' : Block(3573, 'MLEG 21', 'AE', 0)}
 
         for key, value in blocks.items():
             setattr(self, key, value)

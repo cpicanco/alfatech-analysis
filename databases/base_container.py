@@ -8,6 +8,10 @@ class Base_Container(ABC):
         pass
 
     @classmethod
+    def create(cls):
+        return cls()
+
+    @classmethod
     def filename(cls):
         return f'cache/{cls.__name__}.pkl'
 
@@ -30,3 +34,6 @@ class Base_Container(ABC):
     @abstractmethod
     def _student_filter(self, filter_function):
         pass
+
+if __name__ == "__main__":
+    pass
