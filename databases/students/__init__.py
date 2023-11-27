@@ -1,8 +1,11 @@
 import os
 import csv
+import math
 
 from collections import Counter
 from sqlalchemy import text
+import pandas as pd
+
 
 from ..methods import age
 from ..queries import template_from_name
@@ -29,8 +32,11 @@ class Student:
         self.has_m1 = None
         self.has_m2 = None
         self.has_m3 = None
+        self.acoles_is_complete = []
         self.acoles = []
         self.modules = []
+        self.frequency = None
+
 
         if student_data is None:
             self.name = None
@@ -65,10 +71,42 @@ class Student:
         elif module_id == MODULO3_ID:
             self.has_m3 = completion
 
+    def days_per_week(self):
+        if self.frequency is not None:
+            df = pd.DataFrame({'date': self.frequency})
+            df['date_string'] = df['date'].dt.strftime('%Y-%m-%d')
+            df = df.drop_duplicates(subset=['date_string'])
+
+            # Extract year and week from the original DataFrame
+            df['year'] = df['date'].dt.year
+            df['week'] = df['date'].dt.isocalendar().week
+
+            # Group by year and week, calculate count
+            result = df.groupby(['week']).size().reset_index(name='count')
+
+            # Find the minimum and maximum dates
+            min_week = result['week'].min()
+            max_week = result['week'].max()
+
+            # Generate a range of weeks based on the number of weeks
+            week_range = pd.DataFrame(
+                [(week,) for week in range(min_week, max_week + 1)],
+                columns=['week']
+            )
+
+            # Merge the result with the dynamically generated weeks and fill NaN with zero
+            result = pd.merge(week_range, result, on=['week'], how='left').fillna(0)
+
+            return result
+
+    def mean_days_per_week(self):
+        df = self.days_per_week()
+        return df['count'].sum()/len(df)
+
 class Students_Container(Base_Container):
-    def __init__(self, **kwargs):
+    def __init__(self, students = [], **kwargs):
         super(Students_Container, self).__init__(**kwargs)
-        self.__students = []
+        self.__students = students
 
     def __len__(self):
         return len(self.__students)
@@ -147,7 +185,7 @@ class Students_Container(Base_Container):
         if count:
             return dict(sorted(Counter(forwardings).items()))
         else:
-            return modules
+            return forwardings
 
     def ages(self, count=False):
         ages = [student.age for student in self.items()]
@@ -169,6 +207,15 @@ class Students_Container(Base_Container):
             return dict(sorted(Counter(school_years).items()))
         else:
             return school_years
+
+    def days_per_week(self):
+        return pd.DataFrame(
+                [(student.mean_days_per_week(),) for student in students],
+                columns=['mean_days_per_week'])
+
+    def by_frequency(self, range):
+        return Students_Container([
+            student for student in self.items() if student.mean_days_per_week() in range])
 
 if Students_Container.cache_exists():
     print('Loading Students from cache')

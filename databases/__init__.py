@@ -41,6 +41,12 @@ def get_trials(trials_data):
         trials_len = None
     return (trials, trials_len, percentage, date)
 
+def get_frequency_from_student(connection, student_id):
+    frequency_template = template_from_name('frequency_from_student')
+    frequency = connection.execute(text(frequency_template).bindparams(
+        STUDENT_ID=student_id)).fetchall()
+    return [f[0] for f in frequency if frequency != []]
+
 def get_step_trials(connection, registration_id, program_id, step_id, student_id):
     trials_template = template_from_name('step_trials_from_student')
     trials_data = connection.execute(text(trials_template).bindparams(
@@ -114,6 +120,15 @@ def complete_module_from_student(connection, student_id, module_id):
         return False
     return False if result[0].IS_COMPLETE == 0 else True
 
+def complete_acole(connection, registration_id, student_id, acole_id):
+    sessions_template = template_from_name('complete_acole_from_registration')
+    result = connection.execute(text(sessions_template).bindparams(
+        REGISTRATION_ID=registration_id,
+        PROGRAM_ID=acole_id,
+        STUDENT_ID=student_id)).fetchall()
+    if result == []:
+        return False
+    return False if result[0].IS_COMPLETE == 0 else True
 
 
 def populate_acole_data(ACOLE, registration_index=0):
@@ -123,8 +138,15 @@ def populate_acole_data(ACOLE, registration_index=0):
         with geic_db.connect() as connection:
             for student in students:
                 # get oldest program's registration
+                if student.frequency is None:
+                    student.frequency = get_frequency_from_student(connection, student.id)
                 acole_registration = get_registration(connection, ACOLE.id, student.id)
 
+                # complete_registrations = [r[0] for r in acole_registration if complete_acole(connection, r[0], student.id, ACOLE.id)]
+                # incomplete_registrations = [r[0] for r in acole_registration if not complete_acole(connection, r[0], student.id, ACOLE.id)]
+                # print(student.name)
+                # print(complete_registrations)
+                # print(incomplete_registrations)
                 if registration_index >= len(acole_registration):
                     continue
 
@@ -132,6 +154,7 @@ def populate_acole_data(ACOLE, registration_index=0):
 
                 student.forward_to(get_forwarding_trial(connection, acole_registration_id, ACOLE.id, student.id))
                 student.acoles.append(ACOLE.create())
+                student.acoles_is_complete.append(complete_acole(connection, acole_registration_id, student.id, ACOLE.id))
                 for block, student_block in zip(ACOLE.blocks, student.acoles[-1].blocks):
                     (trials, trials_len, percentage, date) = get_block_trials(connection, acole_registration_id, ACOLE.id, block.id, student.id)
                     trials_len = len(trials)
@@ -139,9 +162,11 @@ def populate_acole_data(ACOLE, registration_index=0):
                         block.data['students'].append(student)
                         block.data['trials'].append(trials)
                         block.data['percentages'].append(percentage)
+                        block.data['sessions'].append(1)
                         student_block.data['students'].append(student)
                         student_block.data['trials'].append(trials)
                         student_block.data['percentages'].append(percentage)
+                        student_block.data['sessions'].append(1)
                     else:
                         percentage = None
                         trials_len = None
@@ -280,3 +305,4 @@ for i, MODULE in enumerate([MODULE1, MODULE2, MODULE3]):
             MODULE2.save_to_file()
             MODULE3.save_to_file()
             cache_students()
+            print('Cache saved')

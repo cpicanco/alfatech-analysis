@@ -21,6 +21,7 @@ class Block:
         self.forwarding = None
         self.sex = None
         self.completed = {'m1': None, 'm2': None, 'm3': None}
+        self.frequency_range = None
 
 class Container(Base_Container):
     def __init__(self, **kwargs):
@@ -31,6 +32,7 @@ class Container(Base_Container):
         self.forwarding = None
         self.sex = None
         self.completed = {'m1': None, 'm2': None, 'm3': None}
+        self.frequency_range = None
 
     def _filter(self, filter_function, filtered):
         for block, block_filtered in zip(self.blocks, filtered.blocks):
@@ -195,10 +197,16 @@ class Container(Base_Container):
             block.completed[f'm{module}'] = completed
         return filtered
 
-    @abstractmethod
-    def _student_filter(self, filter_function):
-        pass
+    def by_frequency(self, frequency_range):
+        filter_function = lambda student: student.mean_days_per_week() in frequency_range
+        filtered = self._student_filter(filter_function)
+        filtered.frequency_range = frequency_range
+        for block in filtered.blocks:
+            block.frequency_range = frequency_range
+        return filtered
 
+    def _student_filter(self, filter_function):
+        return self._filter(filter_function, self.create())
 
 class ACOLE_Container(Container):
     def __init__(self, **kwargs):
@@ -217,16 +225,17 @@ class ACOLE_Container(Container):
         self.id = 372
 
 class ACOLE1_Container(ACOLE_Container):
-    def _student_filter(self, filter_function):
-        return self._filter(filter_function, ACOLE1_Container())
+    def __init__(self, **kwargs):
+        super(ACOLE1_Container, self).__init__(**kwargs)
 
 class ACOLE2_Container(ACOLE_Container):
-    def _student_filter(self, filter_function):
-        return self._filter(filter_function, ACOLE2_Container())
+    def __init__(self, **kwargs):
+        super(ACOLE2_Container, self).__init__(**kwargs)
 
 class ACOLE3_Container(ACOLE_Container):
-    def _student_filter(self, filter_function):
-        return self._filter(filter_function, ACOLE3_Container())
+    def __init__(self, **kwargs):
+        super(ACOLE3_Container, self).__init__(**kwargs)
+
 
 class MODULE1_Container(Container):
     def __init__(self, **kwargs):
