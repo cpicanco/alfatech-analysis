@@ -5,7 +5,7 @@ from databases.students import students
 from databases import ACOLE1, ACOLE2
 from methods import output_path
 
-top_labels = ['Leitura', 'Ditado por composição', 'Ditado manuscrito']
+from Fig30 import top_labels
 
 # ValueError: List of boxplot statistics and `positions` values must have same the length
 def boxplot_blocks(ax, blocks, label):
@@ -29,17 +29,17 @@ def boxplot_blocks(ax, blocks, label):
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
 
     # Annotate mean, min, and max for each block
-    for i, box in enumerate(bp['boxes']):
-        pos = bar_positions[i]
-        mean_val = np.mean(data[i])
-        min_val = np.min(data[i])
-        max_val = np.max(data[i])
+    # for i, box in enumerate(bp['boxes']):
+    #     pos = bar_positions[i]
+    #     mean_val = np.mean(data[i])
+    #     min_val = np.min(data[i])
+    #     max_val = np.max(data[i])
 
         # ax.text(pos, 1 , f'M={mean_val:.1f}%', ha='center', color='black')
         # ax.text(pos, min_val - 0.01, f'{min_val:.1f}%', ha='center', color='black')
         # ax.text(pos, max_val + 0.01, f'{max_val:.1f}%', ha='center', color='black')
 
-def plot_blocks(ax, blocks, label):
+def plot_blocks(ax, blocks, label, y_padding=1.0):
     bar_width = 0.4
     bar_positions = np.arange(len(blocks))
 
@@ -49,7 +49,7 @@ def plot_blocks(ax, blocks, label):
     means = [np.mean(d) for d in data]
 
     # ax.set_ylim(0, 100)
-    ax.set_title(label)
+    ax.set_title(label, y=y_padding)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -86,17 +86,16 @@ def bar_plot(ACOLE1, ACOLE2, use_boxplot, filename, title):
     fig.set_dpi(100)
     fig.suptitle(title, y=1.035, fontsize=14)
 
-
     groups = [reading, composition, manuscript]
-    for blocks in groups:
-        for block in blocks:
+    for group in groups:
+        for block in group:
             block.legend = str([block.frequency_range.low, block.frequency_range.high])
 
-    for (ax, label, blocks) in zip(axs, top_labels, groups):
+    for (ax, label, data) in zip(axs, top_labels, groups):
         if use_boxplot:
-            boxplot_blocks(ax, blocks, label)
+            boxplot_blocks(ax, data, label)
         else:
-            plot_blocks(ax, blocks, label)
+            plot_blocks(ax, data, label)
 
     fig.text(0.5, -0.05, 'Faixa de frequência semanal\n(Dias/Semana)', ha='center', va='center', fontsize=12)
     handles, labels = ax.get_legend_handles_labels()
@@ -116,26 +115,24 @@ def plot():
     filtered_students = students.create()
 
     for student in students:
-        if student.has_two_acoles():
-            acole1, acole2 = student.get_first_and_last_acoles()
+        if student.has_two_complete_acoles():
+            acole1, acole2 = student.get_complete_acoles()
             if len(student.modules) > 0:
-                if student.has_m1:
-                    filtered_students.append(student)
-                    for block, student_block in zip(ACOLE_1.blocks, student.acoles[acole1].blocks):
-                        for key, data in student_block.data.items():
-                            if len(data) > 0:
-                                block.data[key].append(data[0])
+                filtered_students.append(student)
+                for block, student_block in zip(ACOLE_1.blocks, student.acoles[acole1].blocks):
+                    for key, data in student_block.data.items():
+                        if len(data) > 0:
+                            block.data[key].append(data[0])
 
-                    for block, student_block in zip(ACOLE_2.blocks, student.acoles[acole2].blocks):
-                        for key, data in student_block.data.items():
-                            if len(data) > 0:
-                                block.data[key].append(data[0])
-
-    title_suffix = 'entre a porcentagem de acertos na ACOLE final e inicial,\ncom leitura ou ditado, de estudantes com Módulo 1 completo,\n por faixa de frequência no projeto'
-    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=False, filename='Fig30',
+                for block, student_block in zip(ACOLE_2.blocks, student.acoles[acole2].blocks):
+                    for key, data in student_block.data.items():
+                        if len(data) > 0:
+                            block.data[key].append(data[0])
+    title_suffix = 'entre a porcentagem de acertos na ACOLE final e inicial,\n com leitura e ditado, por faixa de frequência no projeto'
+    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=False, filename='Fig34',
             title='Diferença '+title_suffix)
-    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=True, filename='Fig30',
-            title='Distribuição da diferença ' + title_suffix)
+    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=True, filename='Fig34',
+            title='Distribuição da diferença '+title_suffix)
 
 if __name__ == "__main__":
    plot()

@@ -87,6 +87,7 @@ def bar_plot(MODULE1, filename, title):
     axs[1].annotate(f'= mín', (x_pos+1, y_pos -0.3), ha='center', color='black', fontsize=8)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
+    plt.close()
 
 def plot():
     bar_plot(MODULE1, 'Fig24',

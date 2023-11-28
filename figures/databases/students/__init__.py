@@ -111,6 +111,12 @@ class Student:
     def get_complete_acoles(self):
         return self.__true_indices[0], self.__true_indices[1]
 
+    def has_two_acoles(self):
+        return len(self.acoles) > 1
+
+    def get_first_and_last_acoles(self):
+        return 0, len(self.acoles) - 1
+
 class Students_Container(Base_Container):
     def __init__(self, students = [], **kwargs):
         super(Students_Container, self).__init__(**kwargs)

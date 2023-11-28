@@ -136,6 +136,7 @@ def bar_plot(ACOLE, filename, title):
     fig.text(0.5, -0.04, 'Idade', ha='center', va='center', fontsize=12)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
+    plt.close()
 
 def plot():
     bar_plot(ACOLE1, 'Fig20',

@@ -73,6 +73,20 @@ class Container(Base_Container):
                     block_filtered.data['sessions'].append(None)
         return filtered
 
+    def clone(self):
+        clone = self.create()
+        clone.steps = self.steps
+        clone.blocks = self.blocks
+        clone.id = self.id
+        clone.age_group = self.age_group
+        clone.forwarding = self.forwarding
+        clone.sex = self.sex
+        clone.completed = self.completed.copy()
+        clone.frequency_range = self.frequency_range
+        for block, block_clone in zip(self.blocks, clone.blocks):
+            for key, data in block.data.items():
+                block_clone.data[key] = data.copy()
+
     def students(self, filter_function=None):
         if filter_function is None:
             filter_function = lambda student: True

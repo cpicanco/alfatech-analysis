@@ -7,7 +7,7 @@ class OutputFiles:
                  output_dir='output'):
         self.extension = extention
         self.base_dir = base_dir
-        self.output_dir = os.path.join(base_dir, output_dir)
+        self.directory = os.path.join(base_dir, output_dir)
 
 opt = OutputFiles()
 
@@ -43,4 +43,4 @@ def statistics_from_blocks(blocks, key='percentages'):
     return values, stds, lengths, medians, mins, maxs
 
 def output_path(filename):
-    return os.path.join(opt.output_dir, filename+opt.extension)
+    return os.path.join(opt.directory, filename+opt.extension)

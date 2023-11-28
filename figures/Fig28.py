@@ -127,6 +127,7 @@ def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename, title):
     else:
         figure_name = filename
     plt.savefig(output_path(figure_name), bbox_inches='tight')
+    plt.close()
 
 def plot():
     ACOLE_1 = ACOLE1.create()

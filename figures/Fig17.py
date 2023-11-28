@@ -86,6 +86,7 @@ def bar_plot(ACOLE, filename, title, y_padding):
     plot_blocks(axs[1], difficult_blocks)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
+    plt.close()
 
 def plot():
     bar_plot(ACOLE1, 'Fig17_acole1',
