@@ -34,11 +34,22 @@ def boxplot_blocks(ax, blocks, title):
         # ax.text(pos, min_val - 0.01, f'{min_val:.1f}%', ha='center', color='black')
         # ax.text(pos, max_val + 0.01, f'{max_val:.1f}%', ha='center', color='black')
 
-def plot_blocks(ax, blocks, title):
-    bar_positions = np.arange(len(blocks))
-
+def plot_blocks_pairs(ax, blocks, title):
+    bar_width = 0.4
+    half = len(blocks) // 2
+    color1 = 'salmon'
+    color2 = 'skyblue'
+    colors1 = color1
+    colors2 = color2
+    labels1 = 'Inicial'
+    labels2 = 'Final'
+    bar_positions1 = np.arange(half)
+    bar_positions2 = np.array(bar_positions1) + bar_width
     bar_values, bar_stds, bar_lengths, bar_medians, mins, maxs = statistics_from_blocks(blocks)
-
+    tick_labels = [block.legend for block in blocks]
+    tick_labels = tick_labels[::2]
+    bar_values1 = bar_values[::2]
+    bar_values2 = bar_values[1::2]
     ax.set_ylim(0, 100)
     ax.set_title(title)
     ax.spines['top'].set_visible(False)
@@ -46,71 +57,75 @@ def plot_blocks(ax, blocks, title):
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
-    bars = ax.bar(bar_positions, bar_values)
+    bars1 = ax.bar(bar_positions1, bar_values1, width=bar_width, color=colors1, label=labels1)
+    bars2 = ax.bar(bar_positions2, bar_values2, width=bar_width, color=colors2, label=labels2)
 
-    ax.set_xticks(bar_positions + 0.4)
-    ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
+    ax.set_xticks(bar_positions2-bar_width/2)
+    ax.set_xticklabels(tick_labels, ha='center')
 
 
 def do_plot(ACOLE1, MODULE1, ACOLE2, use_boxplot, filename, title):
     fig, axs = plt.subplots(3, 1, sharey=True)
-    fig.set_size_inches(5, 14)
+    fig.set_size_inches(5, 10)
     fig.set_dpi(100)
 
     fig.suptitle(title, fontsize=14)
 
-    ACOLE1.LEITURA.legend = 'ACOLE inicial'
-    ACOLE1.LEITURA_DIFICULDADES.legend = 'ACOLE inicial - Dificuldades'
-    MODULE1.EXTAI.legend = 'Módulo 1 t. ext. inicial 1'
-    MODULE1.EXTBI.legend = 'Módulo 1 t. ext. inicial 2'
-    MODULE1.EXTAF.legend = 'Módulo 1 t. ext. final 1'
-    MODULE1.EXTBF.legend = 'Módulo 1 t. ext. final 2'
-    ACOLE2.LEITURA.legend = 'ACOLE final'
-    ACOLE2.LEITURA_DIFICULDADES.legend = 'ACOLE final - Dificuldades'
+    ACOLE1.LEITURA.legend = 'ACOLE'
+    ACOLE2.LEITURA.legend = 'ACOLE'
+    ACOLE1.LEITURA_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    ACOLE2.LEITURA_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    MODULE1.EXTAI.legend = 'Módulo 1\nt. ext. 1'
+    MODULE1.EXTAF.legend = 'Módulo 1\nt. ext. 1'
+    MODULE1.EXTBI.legend = 'Módulo 1\nt. ext. 2'
+    MODULE1.EXTBF.legend = 'Módulo 1\nt. ext. 2'
 
-    acole1_reading = [ACOLE1.LEITURA, ACOLE1.LEITURA_DIFICULDADES]
-    module_reading = [MODULE1.EXTAI, MODULE1.EXTBI, MODULE1.EXTAF, MODULE1.EXTBF]
-    acole2_reading = [ACOLE2.LEITURA, ACOLE2.LEITURA_DIFICULDADES]
-    reading = acole1_reading + module_reading + acole2_reading
+    acole1_reading = [ACOLE1.LEITURA, ACOLE2.LEITURA]
+    acole2_reading = [ACOLE1.LEITURA_DIFICULDADES, ACOLE2.LEITURA_DIFICULDADES]
+    module_reading = [MODULE1.EXTAI, MODULE1.EXTAF, MODULE1.EXTBI, MODULE1.EXTBF]
+    reading = acole1_reading + acole2_reading + module_reading
 
     if use_boxplot:
         boxplot_blocks(axs[0], reading, 'Leitura')
     else:
-        plot_blocks(axs[0], reading, 'Leitura')
+        plot_blocks_pairs(axs[0], reading, 'Leitura')
 
-    ACOLE1.DITADO_COMPOSICAO.legend = 'ACOLE inicial'
-    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = 'ACOLE inicial - Dificuldades'
-    MODULE1.EXTDI.legend = 'Módulo 1 t. ext. inicial'
-    MODULE1.EXTDF.legend = 'Módulo 1 t. ext. final'
-    ACOLE2.DITADO_COMPOSICAO.legend = 'ACOLE final'
-    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = 'ACOLE final - Dificuldades'
+    ACOLE1.DITADO_COMPOSICAO.legend = 'ACOLE'
+    ACOLE2.DITADO_COMPOSICAO.legend = 'ACOLE'
+    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    MODULE1.EXTDI.legend = 'Módulo 1\nt. ext.'
+    MODULE1.EXTDF.legend = 'Módulo 1\nt. ext.'
 
-    acole1_dictation = [ACOLE1.DITADO_COMPOSICAO, ACOLE1.DITADO_COMPOSICAO_DIFICULDADES]
+    acole1_dictation = [ACOLE1.DITADO_COMPOSICAO, ACOLE2.DITADO_COMPOSICAO]
+    acole2_dictation = [ACOLE1.DITADO_COMPOSICAO_DIFICULDADES, ACOLE2.DITADO_COMPOSICAO_DIFICULDADES]
     module_dictation = [MODULE1.EXTDI, MODULE1.EXTDF]
-    acole2_dictation = [ACOLE2.DITADO_COMPOSICAO, ACOLE2.DITADO_COMPOSICAO_DIFICULDADES]
-    dictation = acole1_dictation + module_dictation + acole2_dictation
+
+    dictation = acole1_dictation + acole2_dictation + module_dictation
 
     if use_boxplot:
         boxplot_blocks(axs[1], dictation, 'Ditado por composição')
     else:
-        plot_blocks(axs[1], dictation, 'Ditado por composição')
+        plot_blocks_pairs(axs[1], dictation, 'Ditado por composição')
 
-    ACOLE1.DITADO_MANUSCRITO.legend = 'ACOLE inicial'
-    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = 'ACOLE inicial - Dificuldades'
-    MODULE1.EXTCI.legend = 'Módulo 1 t. ext. inicial'
-    MODULE1.EXTCF.legend = 'Módulo 1 t. ext. final'
-    ACOLE2.DITADO_MANUSCRITO.legend = 'ACOLE final'
-    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = 'ACOLE final - Dificuldades'
+    ACOLE1.DITADO_MANUSCRITO.legend = 'ACOLE'
+    ACOLE2.DITADO_MANUSCRITO.legend = 'ACOLE'
+    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    MODULE1.EXTCI.legend = 'Módulo 1\nt. ext.'
+    MODULE1.EXTCF.legend = 'Módulo 1\nt. ext.'
 
-    acole1_manuscript = [ACOLE1.DITADO_MANUSCRITO, ACOLE1.DITADO_MANUSCRITO_DIFICULDADES]
+    acole1_manuscript = [ACOLE1.DITADO_MANUSCRITO, ACOLE2.DITADO_MANUSCRITO]
+    acole2_manuscript = [ACOLE1.DITADO_MANUSCRITO_DIFICULDADES, ACOLE2.DITADO_MANUSCRITO_DIFICULDADES]
     module_manuscript = [MODULE1.EXTCI, MODULE1.EXTCF]
-    acole2_manuscript = [ACOLE2.DITADO_MANUSCRITO, ACOLE2.DITADO_MANUSCRITO_DIFICULDADES]
-    manuscript = acole1_manuscript + module_manuscript + acole2_manuscript
-
+    manuscript = acole1_manuscript + acole2_manuscript + module_manuscript
     if use_boxplot:
         boxplot_blocks(axs[2], manuscript, 'Ditado manuscrito')
     else:
-        plot_blocks(axs[2], dictation, 'Ditado manuscrito')
+        plot_blocks_pairs(axs[2], dictation, 'Ditado manuscrito')
+
+    handles, labels = axs[1].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='center')
 
     plt.tight_layout()
     if use_boxplot:
@@ -144,10 +159,10 @@ def plot():
                                 block.data[key].append(data[0])
 
     do_plot(ACOLE_1, MODULE_1, ACOLE_2,
-             filename='Fig27', use_boxplot=False,
+             filename='Fig27b', use_boxplot=False,
              title='Porcentagem média de acertos na ACOLE inicial,\ntestes de Módulo 1 e ACOLE final')
     do_plot(ACOLE_1, MODULE_1, ACOLE_2, use_boxplot=True,
-             filename='Fig27',
+             filename='Fig27b',
              title='Distribuição da porcentagem de acertos na ACOLE inicial,\ntestes de Módulo 1 e ACOLE final')
 
 if __name__ == "__main__":

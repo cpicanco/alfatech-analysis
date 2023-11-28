@@ -2,11 +2,14 @@ import numpy as np
 
 class Range:
     def __init__(self, low, high):
-        self.low = low[0]
-        self.high = high[0]
+        self.low = low
+        self.high = high
 
     def __contains__(self, value):
-        return self.low <= value <= self.high
+        return self.low <= value < self.high
+
+    def as_list(self):
+        return [self.low, self.high]
 
 class RangeContainer:
     def __init__(self, values):

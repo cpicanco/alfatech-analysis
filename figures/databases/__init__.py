@@ -132,21 +132,27 @@ def complete_acole(connection, registration_id, student_id, acole_id):
 
 
 def populate_acole_data(ACOLE, registration_index=0):
+    forwarding_modules = {
+        32216 : 'Módulo 1',
+        33048 : 'Módulo 2',
+        33049 : 'Módulo 3',
+        None : None
+    }
     with open(ACOLE.filename()+'.tsv', 'w', encoding='utf-8') as file:
-        file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS']) + '\n')
-        # populate ACOLE data
+        # file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS']) + '\n')
+        # file.write('\t'.join(['NOME', 'ID', 'MATRICULA.ID.COMPLETAS', 'MATRICULA.ID.INCOMPLETAS', 'ENCAMINHAMENTO'])+'\n')
         with geic_db.connect() as connection:
             for student in students:
-                # get oldest program's registration
                 if student.frequency is None:
                     student.frequency = get_frequency_from_student(connection, student.id)
+                    student.calculate_days_per_week()
+
                 acole_registration = get_registration(connection, ACOLE.id, student.id)
 
                 # complete_registrations = [r[0] for r in acole_registration if complete_acole(connection, r[0], student.id, ACOLE.id)]
                 # incomplete_registrations = [r[0] for r in acole_registration if not complete_acole(connection, r[0], student.id, ACOLE.id)]
-                # print(student.name)
-                # print(complete_registrations)
-                # print(incomplete_registrations)
+                # forwardings = [str(r[0])+'->'+str(forwarding_modules[get_forwarding_trial(connection, r[0], ACOLE.id, student.id)]) for r in acole_registration]
+                # file.write('\t'.join([student.name, str(student.id), str(complete_registrations), str(incomplete_registrations), str(forwardings)])+'\n')
                 if registration_index >= len(acole_registration):
                     continue
 
@@ -170,21 +176,21 @@ def populate_acole_data(ACOLE, registration_index=0):
                     else:
                         percentage = None
                         trials_len = None
-                    info = '\t'.join([
-                        student.name,
-                        str(student.id),
-                        block.legend,
-                        str(block.id),
-                        date.strftime('%d/%m/%Y'),
-                        str(acole_registration_id),
-                        str(percentage),
-                        str(trials_len)])
+                    # info = '\t'.join([
+                    #     student.name,
+                    #     str(student.id),
+                    #     block.legend,
+                    #     str(block.id),
+                    #     date.strftime('%d/%m/%Y'),
+                    #     str(acole_registration_id),
+                    #     str(percentage),
+                    #     str(trials_len)])
                     # print(info)
-                    file.write(info + '\n')
+                    # file.write(info + '\n')
 
 def populate_module_data(MODULE):
     with open(MODULE.filename()+'.tsv', 'w', encoding='utf-8') as file:
-        file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS', 'TOTAL_SESSOES']) + '\n')
+        # file.write('\t'.join(['NOME', 'ID', 'BLOCO_NOME', 'BLOCO_ID', 'BLOCO_DATA', 'MATRICULA.ID', 'PORCENTAGEM_ACERTOS', 'TOTAL_TENTATIVAS', 'TOTAL_SESSOES']) + '\n')
         with geic_db.connect() as connection:
             for student in students:
                 module1_registrations = get_registration(connection, MODULE.id, student.id)
@@ -242,18 +248,18 @@ def populate_module_data(MODULE):
                         trials_len = None
                         sessions = None
 
-                    info = '\t'.join([
-                        student.name,
-                        str(student.id),
-                        block.legend,
-                        str(block.id),
-                        date.strftime('%d/%m/%Y'),
-                        str(target_registrations),
-                        str(percentage),
-                        str(trials_len),
-                        str(sessions)])
-                    # print(info)
-                    file.write(info + '\n')
+                    # info = '\t'.join([
+                    #     student.name,
+                    #     str(student.id),
+                    #     block.legend,
+                    #     str(block.id),
+                    #     date.strftime('%d/%m/%Y'),
+                    #     str(target_registrations),
+                    #     str(percentage),
+                    #     str(trials_len),
+                    #     str(sessions)])
+                    # # print(info)
+                    # file.write(info + '\n')
 
 ACOLE1 = ACOLE1_Container()
 ACOLE2 = ACOLE2_Container()

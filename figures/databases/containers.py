@@ -1,9 +1,9 @@
-import os
-
-from abc import abstractmethod
 from collections import Counter
 
-from .students import Student
+import numpy as np
+
+from .students import Students_Container
+from .ranges import RangeContainer
 from .base_container import Base_Container
 from .constants import MODULO1_ID, MODULO2_ID, MODULO3_ID
 
@@ -22,6 +22,26 @@ class Block:
         self.sex = None
         self.completed = {'m1': None, 'm2': None, 'm3': None}
         self.frequency_range = None
+
+    def delta(self, block):
+        result = self.clone()
+        result.data['deltas'] = []
+        for percentages, block_percentages in zip(result.data['percentages'], block.data['percentages']):
+            if percentages is not None and block_percentages is not None:
+                result.data['deltas'].append(percentages - block_percentages)
+            else:
+                result.data['deltas'].append(None)
+        return result
+
+    def clone(self):
+        clone = Block(self.id, self.legend, self.code, self.min_trials)
+        clone.age_group = self.age_group
+        clone.forwarding = self.forwarding
+        clone.sex = self.sex
+        clone.completed = self.completed
+        clone.frequency_range = self.frequency_range
+        clone.data = self.data.copy()
+        return clone
 
 class Container(Base_Container):
     def __init__(self, **kwargs):
@@ -63,27 +83,35 @@ class Container(Base_Container):
                     yield student
 
     def summary(self):
-        print('\n\nSummary:'+ self.__class__.__name__)
+        # print('\n\nSummary:'+ self.__class__.__name__)
 
-        print('\nStudents: ')
+        # print('\nStudents: ')
+        # for block in self.blocks:
+        #     students = Students_Container(students=[s for s in block.data["students"] if s is not None])
+        #     print(f'{block.legend}: {len(students)}')
+        #     students.summary()
+
+        # print('\nStudents data points: ')
+        students = Students_Container(students=[s for s in self.blocks[0].data["students"] if s is not None])
+        students.summary_by_frequency(self.frequency_range)
         for block in self.blocks:
             print(f'{block.legend}: {len([s for s in block.data["students"] if s is not None])}')
 
-        print('\nCompleted Modules:')
-        for completed, count in self.completions(count=True).items():
-            print(f'{completed}: {count} data points')
+        # print('\nCompleted Modules:')
+        # for completed, count in self.completions(count=True).items():
+        #     print(f'{completed}: {count} data points')
 
-        print('\nForwarding Modules:')
-        for module, count in self.modules(count=True).items():
-            print(f'{module}: {count} data points')
+        # print('\nForwarding Modules:')
+        # for module, count in self.modules(count=True).items():
+        #     print(f'{module}: {count} data points')
 
-        print('\nAges:')
-        for age, count in self.ages(count=True).items():
-            print(f'{age}: {count} data points')
+        # print('\nAges:')
+        # for age, count in self.ages(count=True).items():
+        #     print(f'{age}: {count} data points')
 
-        print('\nSexes:')
-        for sex, count in self.sexes(count=True).items():
-            print(f'{sex}: {count} data points')
+        # print('\nSexes:')
+        # for sex, count in self.sexes(count=True).items():
+        #     print(f'{sex}: {count} data points')
 
     def completions(self, count=False):
         completed_modules = []
@@ -205,8 +233,16 @@ class Container(Base_Container):
             block.frequency_range = frequency_range
         return filtered
 
+    def days_per_week(self):
+        students = Students_Container(students=[s for s in self.blocks[0].data["students"] if s is not None])
+        return students.days_per_week()
+
+    def custom_range(self, custom_intervals):
+        return RangeContainer(custom_intervals)
+
     def _student_filter(self, filter_function):
         return self._filter(filter_function, self.create())
+
 
 class ACOLE_Container(Container):
     def __init__(self, **kwargs):

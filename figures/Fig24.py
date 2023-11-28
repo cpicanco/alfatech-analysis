@@ -1,17 +1,8 @@
-# python modules
-import os
-import sys
-import datetime
-
-base_dir = os.path.abspath(__file__).rsplit("figures", 1)[0]
-sys.path.append(os.path.join(base_dir))
-
-# graphication
 import matplotlib.pyplot as plt
 import numpy as np
 
 from databases import MODULE1
-from methods import statistics_from_blocks
+from methods import statistics_from_blocks, output_path
 
 def boxplot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
@@ -62,11 +53,11 @@ def plot_blocks(ax, blocks, title):
     return bars, bar_values, bar_positions, bar_lengths, maxs, mins
 
 
-def bar_plot(MODULE1):
+def bar_plot(MODULE1, filename, title):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(12, 5)
     fig.set_dpi(100)
-    fig.suptitle('Número médio de sessões dos passos do módulo 1\ncompleto e incompleto')
+    fig.suptitle(title)
 
 
     complete = [block for block in MODULE1.by_completion(True).blocks if block.min_trials < 0]
@@ -95,7 +86,11 @@ def bar_plot(MODULE1):
     axs[1].annotate(f'= máx', (x_pos+1, y_pos -0.15), ha='center', color='black', fontsize=8)
     axs[1].annotate(f'= mín', (x_pos+1, y_pos -0.3), ha='center', color='black', fontsize=8)
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figures', 'Fig24.png'), bbox_inches='tight')
+    plt.savefig(output_path(filename), bbox_inches='tight')
+
+def plot():
+    bar_plot(MODULE1, 'Fig24',
+        'Número médio de sessões dos passos do módulo 1\ncompleto e incompleto')
 
 if __name__ == "__main__":
-    bar_plot(MODULE1)
+    plot()

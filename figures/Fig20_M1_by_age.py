@@ -1,17 +1,8 @@
-# python modules
-import os
-import sys
-import datetime
-
-base_dir = os.path.abspath(__file__).rsplit("figures", 1)[0]
-sys.path.append(os.path.join(base_dir))
-
-# graphication
 import matplotlib.pyplot as plt
 import numpy as np
 
-from databases import ACOLE
-from methods import statistics_from_block
+from databases import ACOLE1
+from methods import statistics_from_block, output_path
 
 def plot_blocks(ax, grouped_data, title):
     num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
@@ -64,11 +55,11 @@ def plot_blocks(ax, grouped_data, title):
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
 
-def bar_plot_regular_difficult_groups(ACOLE):
+def bar_plot(ACOLE, filename, title):
     fig, axs = plt.subplots(3, 2, sharey=True)
     fig.set_size_inches(12, 18)
     fig.set_dpi(100)
-    fig.suptitle('Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas,\n por idade e encaminhamento')
+    fig.suptitle(title)
 
     top_label = ['Palavras regulares', 'Palavras com\ndificuldades ortográficas']
 
@@ -142,9 +133,13 @@ def bar_plot_regular_difficult_groups(ACOLE):
     fig.text(x_pos, y_pos - 0.020, '2 = mediana', ha='left', color='black')
     fig.text(x_pos, y_pos - 0.040, '3 = desvio padrão', ha='left', color='black')
     fig.text(x_pos, y_pos - 0.060, '4 = tamanho da amostra', ha='left', color='black')
-
+    fig.text(0.5, -0.04, 'Idade', ha='center', va='center', fontsize=12)
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figures', 'Fig20.png'), bbox_inches='tight')
+    plt.savefig(output_path(filename), bbox_inches='tight')
+
+def plot():
+    bar_plot(ACOLE1, 'Fig20',
+        'Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas,\n por idade e encaminhamento')
 
 if __name__ == "__main__":
-    bar_plot_regular_difficult_groups(ACOLE)
+    plot()

@@ -1,32 +1,23 @@
-# python modules
-import os
-import sys
-import pandas as pd
-
-base_dir = os.path.abspath(__file__).rsplit("figures", 1)[0]
-sys.path.append(os.path.join(base_dir))
-
-# graphication
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 import numpy as np
 
 from databases.students import students
-from databases.ranges import RangeContainer
 from databases import ACOLE1, ACOLE2
+from methods import output_path
 
-from methods import statistics_from_blocks
-
-def boxplot_blocks(ax, blocks, title):
+# ValueError: List of boxplot statistics and `positions` values must have same the length
+def boxplot_blocks(ax, blocks, label):
     bar_positions = np.arange(len(blocks))
 
-    data = [[p for p in block.data['percentages'] if p is not None] for block in blocks]
+    data = [[p for p in block.data['deltas'] if p is not None] for block in blocks]
     boxprops = dict(linewidth=2, color='black')
     medianprops = dict(linewidth=2, color='black')
 
+    # print([len(d) for d in data], bar_positions)
+
     bp = ax.boxplot(data, positions=bar_positions, widths=0.6, sym='o', boxprops=boxprops, medianprops=medianprops)
 
-    ax.set_title(title)
+    ax.set_title(label)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -46,132 +37,101 @@ def boxplot_blocks(ax, blocks, title):
         # ax.text(pos, min_val - 0.01, f'{min_val:.1f}%', ha='center', color='black')
         # ax.text(pos, max_val + 0.01, f'{max_val:.1f}%', ha='center', color='black')
 
-def plot_blocks(ax, blocks, title):
+def plot_blocks(ax, blocks, label):
+    bar_width = 0.4
     bar_positions = np.arange(len(blocks))
 
-    bar_values, bar_stds, bar_lengths, bar_medians, mins, maxs = statistics_from_blocks(blocks)
+    data = [[p for p in block.data['deltas'] if p is not None] for block in blocks]
 
-    ax.set_ylim(0, 100)
-    ax.set_title(title)
+    # calculate mean
+    means = [np.mean(d) for d in data]
+
+    # ax.set_ylim(0, 100)
+    ax.set_title(label)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
-    bars = ax.bar(bar_positions, bar_values)
+    legends = [block.legend for block in blocks][0::2]
+    bars = ax.bar(bar_positions[::2], means[::2], width=bar_width, color='salmon', label='Sem dificuldades ortográficas')
+    bars = ax.bar(bar_positions[1::2]-bar_width, means[1::2], width=bar_width, color='skyblue', label='Com dificuldades ortográficas')
 
-    ax.set_xticks(bar_positions + 0.4)
-    ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
+    ax.set_xticks(np.array(bar_positions[1::2]) - bar_width / 2)
+    ax.set_xticklabels(legends, rotation=45, ha='right')
 
-def bar_plot(ACOLE1, MODULE3, ACOLE2, use_boxplot=False):
-    if use_boxplot:
-        title = 'Distribuição da porcentagem de acertos na ACOLE inicial,\nno Módulo 3 (completo) e ACOLE final'
-    else:
-        title = 'Porcentagem média de acertos na ACOLE inicial,\n no Módulo 3 (completo) e ACOLE final'
+def bar_plot(ACOLE1, ACOLE2, use_boxplot, filename, title):
+    # df = ACOLE2.days_per_week()
+    # min_ = df['mean_days_per_week'].min() # 0.07317073170731707
+    # max_ = df['mean_days_per_week'].max() # 2.4615384615384617
+    values = [0.72, 1.30, 1.50, 1.70, 2.5]
 
-    initial_acole_label = 'ACOLE inicial'
-    initial_acole_difficulties_label = 'ACOLE inicial - Dificuldades'
-    final_acole_label = 'ACOLE final'
-    final_acole_difficulties_label = 'ACOLE final - Dificuldades'
+    reading = []
+    composition = []
+    manuscript = []
 
-    ACOLE1.LEITURA.legend = initial_acole_label
-    ACOLE1.LEITURA_DIFICULDADES.legend = initial_acole_difficulties_label
-    ACOLE1.DITADO_COMPOSICAO.legend = initial_acole_label
-    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = initial_acole_difficulties_label
-    ACOLE1.DITADO_MANUSCRITO.legend = initial_acole_label
-    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = initial_acole_difficulties_label
+    for r in ACOLE2.custom_range(values):
+        for block1, block2 in zip(ACOLE1.by_frequency(r).blocks, ACOLE2.by_frequency(r).blocks):
+            if 'Leitura' in block2.legend:
+                reading.append(block2.delta(block1))
+            elif 'composição' in block2.legend:
+                composition.append(block2.delta(block1))
+            elif 'manuscrito' in block2.legend:
+                manuscript.append(block2.delta(block1))
 
-    ACOLE2.LEITURA.legend = final_acole_label
-    ACOLE2.LEITURA_DIFICULDADES.legend = final_acole_difficulties_label
-    ACOLE2.DITADO_COMPOSICAO.legend = final_acole_label
-    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = final_acole_difficulties_label
-    ACOLE2.DITADO_MANUSCRITO.legend = final_acole_label
-    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = final_acole_difficulties_label
+    fig, axs = plt.subplots(3, 1, sharey=True)
+    fig.set_size_inches(5, 10)
+    fig.set_dpi(100)
+    fig.suptitle(title)
 
-    # Get the data from
-    reading = [
-        ACOLE1.LEITURA,
-        ACOLE1.LEITURA_DIFICULDADES,
-        ACOLE2.LEITURA,
-        ACOLE2.LEITURA_DIFICULDADES]
+    top_labels = ['Leitura', 'Composição', 'Manuscrito']
+    groups = [reading, composition, manuscript]
+    for group in groups:
+        for block in group:
+            block.legend = str([block.frequency_range.low, block.frequency_range.high])
 
-    composition = [
-        ACOLE1.DITADO_COMPOSICAO,
-        ACOLE1.DITADO_COMPOSICAO_DIFICULDADES,
-        ACOLE2.DITADO_COMPOSICAO,
-        ACOLE2.DITADO_COMPOSICAO_DIFICULDADES]
+    for (ax, label, data) in zip(axs, top_labels, groups):
+        if use_boxplot:
+            boxplot_blocks(ax, data, label)
+        else:
+            plot_blocks(ax, data, label)
 
-    manuscript = [
-        ACOLE1.DITADO_MANUSCRITO,
-        ACOLE1.DITADO_MANUSCRITO_DIFICULDADES,
-        ACOLE2.DITADO_MANUSCRITO,
-        ACOLE2.DITADO_MANUSCRITO_DIFICULDADES]
+    fig.text(0.5, -0.05, 'Faixa de frequência semanal\n(Dias/Semana)', ha='center', va='center', fontsize=12)
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.9))
 
-    # Get the data for the big axis
-    module3 = [block for block in MODULE3.blocks if block.min_trials == 0]
-
-    fig = plt.figure(figsize=(8, 8))
-    fig.set_dpi(300)
-    fig.suptitle(title, fontsize=14)
-    gs = GridSpec(2, 3, height_ratios=[1.5, 1.5], width_ratios=[1, 1, 1])
-
-    # Create three axes on the top row
-    ax1 = fig.add_subplot(gs[0, 0])
-    ax2 = fig.add_subplot(gs[0, 1], sharey=ax1)
-    ax3 = fig.add_subplot(gs[0, 2], sharey=ax1)
-
-    # Create a larger axis at the bottom that spans all three columns
-    ax_big = fig.add_subplot(gs[1, :], sharey=ax1)
-
-    # Add content to the axes (you can customize this based on your data)
-    if use_boxplot:
-        boxplot_blocks(ax1, reading, 'Leitura')
-        boxplot_blocks(ax2, composition, 'Ditado por composição')
-        boxplot_blocks(ax3, manuscript, 'Ditado manuscrito')
-        boxplot_blocks(ax_big, module3, 'Módulo 3')
-    else:
-        plot_blocks(ax1, reading, 'Leitura')
-        plot_blocks(ax2, composition, 'Ditado por composição')
-        plot_blocks(ax3, manuscript, 'Ditado manuscrito')
-        plot_blocks(ax_big, module3, 'Módulo 3')
-
-    # Adjust layout and add legends if needed
     fig.tight_layout()
-    # ax1.legend()
-    # ax2.legend()
-    # ax3.legend()
-    # ax_big.legend()
-
-    # Show the plot
     if use_boxplot:
-        figure_name = 'Fig30_boxplot.png'
+        figure_name = filename+'_boxplot'
     else:
-        figure_name = 'Fig30.png'
-    plt.savefig(os.path.join(base_dir, 'figures', figure_name), bbox_inches='tight')
+        figure_name = filename
+    plt.savefig(output_path(figure_name), bbox_inches='tight')
 
+def plot():
+    ACOLE_1 = ACOLE1.create()
+    ACOLE_2 = ACOLE2.create()
+    filtered_students = students.create()
+
+    for student in students:
+        if student.has_two_complete_acoles():
+            acole1, acole2 = student.get_complete_acoles()
+            if len(student.modules) > 0:
+                if student.has_m2:
+                    filtered_students.append(student)
+                    for block, student_block in zip(ACOLE_1.blocks, student.acoles[acole1].blocks):
+                        for key, data in student_block.data.items():
+                            if len(data) > 0:
+                                block.data[key].append(data[0])
+
+                    for block, student_block in zip(ACOLE_2.blocks, student.acoles[acole2].blocks):
+                        for key, data in student_block.data.items():
+                            if len(data) > 0:
+                                block.data[key].append(data[0])
+
+    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=False, filename='Fig30',
+            title='Diferença entre a porcentagem de acertos na ACOLE final e inicial\npor faixa de frequência no projeto e tipo de atividade')
+    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=True, filename='Fig30',
+            title='Distribuição da diferença entre a porcentagem de acertos na ACOLE final e inicial\npor faixa de frequência no projeto e tipo de atividade')
 
 if __name__ == "__main__":
-    pass
-    # ACOLE1 = ACOLE1.create()
-    # ACOLE2 = ACOLE2.create()
-    # filtered_students = students.create()
-
-    # for student in students:
-    #     if len(student.acoles) > 1:
-    #         if len(student.modules) > 0:
-    #             if student.has_m1:
-    #                 filtered_students.append(student)
-    #                 for block, student_block in zip(ACOLE1.blocks, student.acoles[0].blocks):
-    #                     for key, data in student_block.data.items():
-    #                         if len(data) > 0:
-    #                             block.data[key].append(data[0])
-
-    #                 for block, student_block in zip(ACOLE2.blocks, student.acoles[1].blocks):
-    #                     for key, data in student_block.data.items():
-    #                         if len(data) > 0:
-    #                             block.data[key].append(data[0])
-
-    # df = filtered_students.days_per_week()
-    # ranges = RangeContainer(np.linspace(df.min(), df.max(), 6))
-    # for r in ranges:
-    #     ACOLE1.by_frequency(r).summary()
+   plot()

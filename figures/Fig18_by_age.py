@@ -1,26 +1,17 @@
-# python modules
-import os
-import sys
-import datetime
-
-base_dir = os.path.abspath(__file__).rsplit("figures", 1)[0]
-sys.path.append(os.path.join(base_dir))
-
-# graphication
 import matplotlib.pyplot as plt
 import numpy as np
 
-# database
-from databases import ACOLE
-from methods import statistics_from_block
+from databases import ACOLE1
+from methods import statistics_from_block, output_path
 
-def plot_blocks(ax, grouped_data, title):
+def plot_blocks(ax, grouped_data, title, write_end_annotation=False):
     num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
     num_blocks = len(grouped_data)
 
     arange = np.arange(num_blocks)
     bar_width = 0.5  # Adjust the width based on your preference
     bar_positions = []
+    y_s = 4
     for i, block_group in enumerate(grouped_data):
         for j, age_block in enumerate(block_group):
             bar_position = (i*1.8) + (i * num_blocks + j) * bar_width
@@ -35,22 +26,26 @@ def plot_blocks(ax, grouped_data, title):
                 bars = ax.bar(bar_position, bar_value, width=bar_width-0.05, color=f'C{j}')
             # Annotate mean on top of each bar
             x_pos = bar_position
-            if j % 2 == 0:
-                y_pos = bar_value + 20  # Adjust the vertical position based on your preference
-            else:
-                y_pos = -20
+            y_pos = bar_value + 16  # Adjust the vertical position based on your preference
 
-            ax.text(x_pos, y_pos, f'{bar_value:.1f}', ha='center', color='black')
-            ax.text(x_pos, y_pos - 5, f'{bar_median:.1f}', ha='center', color='black')
-            ax.text(x_pos, y_pos - 10, f'{bar_std:.1f}', ha='center', color='black')
-            ax.text(x_pos, y_pos - 15, f'{bar_length}', ha='center', color='black')
+            ax.text(x_pos, y_pos, f'{bar_value:.1f}', ha='center', color='black', fontsize=7.5)
+            y_pos = y_pos - y_s
+            ax.text(x_pos, y_pos, f'{bar_median:.1f}', ha='center', color='black', fontsize=7.5)
+            y_pos = y_pos - y_s
+            ax.text(x_pos, y_pos, f'{bar_std:.1f}', ha='center', color='black', fontsize=7.5)
+            y_pos = y_pos - y_s
+            ax.text(x_pos, y_pos, f'{bar_length}', ha='center', color='black', fontsize=7.5)
 
-    x_pos = 0
-    y_pos = -20
-    ax.text(x_pos, y_pos, 'M =', ha='right', color='black')
-    ax.text(x_pos, y_pos - 5, 'Me =', ha='right', color='black')
-    ax.text(x_pos, y_pos - 10, 'σ =', ha='right', color='black')
-    ax.text(x_pos, y_pos - 15, 'n =', ha='right', color='black')
+    if write_end_annotation:
+        x_pos = x_pos + 0.3
+        y_pos = bar_value + 16
+        ax.text(x_pos, y_pos, '= M', ha='left', color='black')
+        y_pos = y_pos - y_s
+        ax.text(x_pos, y_pos, '= Me', ha='left', color='black')
+        y_pos = y_pos - y_s
+        ax.text(x_pos, y_pos, '= σ', ha='left', color='black')
+        y_pos = y_pos - y_s
+        ax.text(x_pos, y_pos, '= n', ha='left', color='black')
 
     ax.set_ylim(0, 100)
     ax.set_title(title)
@@ -64,11 +59,11 @@ def plot_blocks(ax, grouped_data, title):
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
 
-def bar_plot_regular_difficult_groups(ACOLE):
+def bar_plot(ACOLE, filename, title):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(14, 7)
     fig.set_dpi(100)
-    fig.suptitle('Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade')
+    fig.suptitle(title)
 
     # 7: 3 data points
     # 8: 111 data points
@@ -120,13 +115,18 @@ def bar_plot_regular_difficult_groups(ACOLE):
 
     plot_blocks(axs[0], normal_blocks, 'Palavras regulares')
 
-    plot_blocks(axs[1], difficult_blocks, 'Palavras com\ndificuldades ortográficas')
+    plot_blocks(axs[1], difficult_blocks, 'Palavras com\ndificuldades ortográficas', True)
 
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.0), ncol=len(grouped_ages))
-
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(grouped_ages))
+    fig.text(0.5, -0.05, 'Idade', ha='center', va='center', fontsize=12)
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figures', 'Fig18.png'), bbox_inches='tight')
+    plt.savefig(output_path(filename), bbox_inches='tight')
+
+def plot():
+    bar_plot(ACOLE1, 'Fig18',
+        'Porcentagem média de acertos da primeira ACOLE\ncom palavras regulares e com dificuldades ortográficas, por idade'
+    )
 
 if __name__ == "__main__":
-    bar_plot_regular_difficult_groups(ACOLE)
+    plot()

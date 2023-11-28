@@ -1,4 +1,15 @@
+import os
 import numpy as np
+
+class OutputFiles:
+    def __init__(self, extention='.png',
+                 base_dir=os.path.abspath(__file__).rsplit("figures", 1)[0],
+                 output_dir='output'):
+        self.extension = extention
+        self.base_dir = base_dir
+        self.output_dir = os.path.join(base_dir, output_dir)
+
+opt = OutputFiles()
 
 def statistics_from_block(block, key='percentages'):
     data_points = block.data[key]
@@ -30,3 +41,6 @@ def statistics_from_blocks(blocks, key='percentages'):
         mins.append(min_)
         maxs.append(max_)
     return values, stds, lengths, medians, mins, maxs
+
+def output_path(filename):
+    return os.path.join(opt.output_dir, filename+opt.extension)

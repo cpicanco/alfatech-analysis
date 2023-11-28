@@ -1,12 +1,3 @@
-# python modules
-import os
-import sys
-import datetime
-
-base_dir = os.path.abspath(__file__).rsplit("figures", 1)[0]
-sys.path.append(os.path.join(base_dir))
-
-# graphication
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
@@ -14,7 +5,7 @@ import numpy as np
 from databases.students import students
 from databases import MODULE2, ACOLE1, ACOLE2
 
-from methods import statistics_from_blocks
+from methods import statistics_from_blocks, output_path
 
 def boxplot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
@@ -62,12 +53,7 @@ def plot_blocks(ax, blocks, title):
     ax.set_xticks(bar_positions + 0.4)
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
 
-def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot=False):
-    if use_boxplot:
-        title = 'Distribuição da porcentagem de acertos na ACOLE inicial,\ntestes de Módulo 2 (completo) e ACOLE final'
-    else:
-        title = 'Porcentagem média de acertos na ACOLE inicial,\ntestes de Módulo 2 (completo) e ACOLE final'
-
+def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename, title):
     initial_acole_label = 'ACOLE inicial'
     initial_acole_difficulties_label = 'ACOLE inicial - Dificuldades'
     final_acole_label = 'ACOLE final'
@@ -134,43 +120,41 @@ def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot=False):
         plot_blocks(ax3, manuscript, 'Ditado manuscrito')
         plot_blocks(ax_big, module2, 'Módulo 2')
 
-    # Adjust layout and add legends if needed
     fig.tight_layout()
-    # ax1.legend()
-    # ax2.legend()
-    # ax3.legend()
-    # ax_big.legend()
-
-    # Show the plot
+    plt.tight_layout()
     if use_boxplot:
-        figure_name = 'Fig28_boxplot.png'
+        figure_name = filename+'_boxplot'
     else:
-        figure_name = 'Fig28.png'
-    plt.savefig(os.path.join(base_dir, 'figures', figure_name), bbox_inches='tight')
+        figure_name = filename
+    plt.savefig(output_path(figure_name), bbox_inches='tight')
 
-
-if __name__ == "__main__":
-    ACOLE1 = ACOLE1.create()
-    ACOLE2 = ACOLE2.create()
-    MODULE2 = MODULE2.create()
+def plot():
+    ACOLE_1 = ACOLE1.create()
+    ACOLE_2 = ACOLE2.create()
+    MODULE_2 = MODULE2.create()
     for student in students:
         if len(student.acoles) > 1:
             if len(student.modules) > 0:
                 if student.has_m2:
-                    for block, student_block in zip(ACOLE1.blocks, student.acoles[0].blocks):
+                    for block, student_block in zip(ACOLE_1.blocks, student.acoles[0].blocks):
                         for key, data in student_block.data.items():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
 
-                    for block, student_block in zip(ACOLE2.blocks, student.acoles[1].blocks):
+                    for block, student_block in zip(ACOLE_2.blocks, student.acoles[1].blocks):
                         for key, data in student_block.data.items():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
 
-                    for block, student_block in zip(MODULE2.blocks, student.modules[0].blocks):
+                    for block, student_block in zip(MODULE_2.blocks, student.modules[0].blocks):
                         for key, data in student_block.data.items():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
 
-    bar_plot(ACOLE1, MODULE2, ACOLE2)
-    bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot=True)
+    bar_plot(ACOLE_1, MODULE_2, ACOLE_2, use_boxplot=False, filename='Fig28',
+        title='Porcentagem média de acertos na ACOLE inicial,\ntestes de Módulo 2 (completo) e ACOLE final')
+    bar_plot(ACOLE_1, MODULE_2, ACOLE_2, use_boxplot=True, filename='Fig28',
+        title='Distribuição da porcentagem de acertos na ACOLE inicial,\ntestes de Módulo 2 (completo) e ACOLE final')
+
+if __name__ == "__main__":
+    plot()
