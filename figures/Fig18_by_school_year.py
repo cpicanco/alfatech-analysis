@@ -2,20 +2,17 @@ import matplotlib.pyplot as plt
 
 from databases import ACOLE1
 from methods import statistics_from_block, output_path
-from base import default_axis_config, upper_summary
+from base import upper_summary, default_axis_config
 from Fig17 import top_labels
 from colors import color_median
 
-filename = 'Fig18_idade'
+filename = 'Fig18_ano_escolar'
 
 def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
     num_blocks = len(grouped_data)
-    ax.set_title(title, va='top', y=1.3)
-    default_axis_config(ax)
 
-    bar_positions = []
-    bar_width = 0.4  # Adjust the width based on your preference
+    bar_width = 0.7  # Adjust the width based on your preference
     bar_positions = []
     positions = []
     values = []
@@ -23,34 +20,38 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     medians = []
     for i, block_group in enumerate(grouped_data):
         for j, age_block in enumerate(block_group):
-            bar_position = (i*1.8) + (i * num_blocks + j) * bar_width
-            bar_values, bar_std, bar_length, bar_median, _, _ = statistics_from_block(age_block)
+            bar_position = (i*1.3) + (i * num_blocks + j) * bar_width
+            bar_values, _, bar_length, bar_median, _, _ = statistics_from_block(age_block)
             # save qq plot for visual inspection
             # qq_plot(age_block, filename+'_'+str(age_block.age_group))
             if j == 0:
                 bar_positions.append(bar_position)
 
             if i == 0:
-                bars = ax.bar(bar_position, bar_values, width=bar_width-0.05, label=f'{age_block.age_group}', color=f'C{j}')
+                bars = ax.bar(bar_position, bar_values, width=bar_width-0.05, label=f'{age_block.school_year}', color=f'C{j}')
             else:
                 bars = ax.bar(bar_position, bar_values, width=bar_width-0.05, color=f'C{j}')
             ax.hlines(bar_median, bars[0].get_x(), bars[0].get_x() + bars[0].get_width(), linestyles='solid', color=color_median)
 
-            # Annotate mean on top of each bar
             positions.append(bar_position)
             values.append(bar_values)
             lengths.append(bar_length)
             medians.append(bar_median)
+
     upper_summary(ax, positions, values, medians, lengths, x=-0.5, show_label=write_start_annotation)
+
+    ax.set_title(title, va='top', y=1.3)
+    default_axis_config(ax)
 
     # Set x-axis ticks and labels
     bar_positions = [ i+(bar_width*num_age_groups/2) - (bar_width/2) for i in bar_positions]
     ax.set_xticks(bar_positions)
-    ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
+    x_labels = [block[0].legend.replace('Ditado ', 'Ditado\n').replace('por ', 'por\n').replace('*', '') for block in grouped_data]
+    ax.set_xticklabels(x_labels)
 
 def bar_plot(ACOLE):
     fig, axs = plt.subplots(1, 2, sharey=True)
-    fig.set_size_inches(16, 5)
+    fig.set_size_inches(10, 5)
     fig.set_dpi(100)
 
     # 7: 3 data points
@@ -63,9 +64,9 @@ def bar_plot(ACOLE):
     # 14: 24 data points
     # 15: 6 data points
     # 19: 3 data points
-    grouped_ages = [[7, 8], [9], [10], [11], [12], [13, 14, 15, 19]]
+    school_years = [3, 4, 5]
 
-    all_data = [ACOLE.by_age(ages) for ages in grouped_ages]
+    all_data = [ACOLE.by_school_year(school_year) for school_year in school_years]
 
     leitura = []
     ditado_composicao = []
@@ -106,18 +107,19 @@ def bar_plot(ACOLE):
     plot_blocks(axs[1], difficult_blocks, top_labels[1].replace('\n', ' '))
 
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(grouped_ages))
-    fig.text(0.5, -0.05, 'Idade', ha='center', va='center', fontsize=12)
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(school_years))
+    fig.text(0.5, -0.05, 'Ano escolar', ha='center', va='center', fontsize=12)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()
 
 """
     Porcentagem média de acertos da primeira ACOLE
-    com palavras regulares e com dificuldades ortográficas, por idade
+    com palavras regulares e com dificuldades ortográficas, por ano escolar
 """
 def plot():
     bar_plot(ACOLE1)
+    # ACOLE1.summary()
 
 if __name__ == "__main__":
     plot()

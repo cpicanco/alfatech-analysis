@@ -1,5 +1,8 @@
 import os
+
 import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
 
 class OutputFiles:
     def __init__(self, extention='.png',
@@ -7,12 +10,28 @@ class OutputFiles:
                  output_dir='output'):
         self.extension = extention
         self.base_dir = base_dir
-        self.directory = os.path.join(base_dir, output_dir)
+        self.__base_output_dir = os.path.join(base_dir, output_dir)
+        self.directory = self.__base_output_dir
+
+    def output_path(self, filename):
+        return os.path.join(self.directory, filename+self.extension)
+
+    def cd(self, folder):
+        self.directory = os.path.join(self.directory, folder)
+
+    def back(self):
+        self.directory = self.__base_output_dir
 
 opt = OutputFiles()
 
 def statistics_from_block(block, key='percentages'):
     data_points = block.data[key]
+    participants = block.data['students']
+    for d, p in zip(data_points, participants):
+        if d is not None:
+            if d > 10:
+                print(p.id, d)
+
     data_points = [p for p in data_points if p is not None]
     bar_length = len(data_points)
     if bar_length > 0:
@@ -21,12 +40,21 @@ def statistics_from_block(block, key='percentages'):
         bar_median = np.median(data_points)
         bar_min = np.min(data_points)
         bar_max = np.max(data_points)
+
     else:
-        bar_value = np.nan
-        bar_std = np.nan
-        bar_median = np.nan
-        bar_min = np.nan
-        bar_max = np.nan
+        if key=='percentages':
+            bar_length = 1
+            bar_value = 0
+            bar_std = 0
+            bar_median = 0
+            bar_min = 0
+            bar_max = 0
+        else:
+            bar_value = np.nan
+            bar_std = np.nan
+            bar_median = np.nan
+            bar_min = np.nan
+            bar_max = np.nan
 
     return bar_value, bar_std, bar_length, bar_median, bar_min, bar_max
 
@@ -42,5 +70,13 @@ def statistics_from_blocks(blocks, key='percentages'):
         maxs.append(max_)
     return values, stds, lengths, medians, mins, maxs
 
+# Q-Q plot
+def qq_plot(block):
+    sm.qqplot(np.array([p for p in block.data['percentages'] if p is not None]), line='s')
+    plt.title(opt.filename+'_'+block.to_string())
+    plt.tight_layout()
+    plt.savefig(opt.output_path(), bbox_inches='tight')
+    plt.close()
+
 def output_path(filename):
-    return os.path.join(opt.directory, filename+opt.extension)
+    return opt.output_path(filename)

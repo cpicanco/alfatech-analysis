@@ -53,12 +53,10 @@ def plot_blocks(ax, blocks, title):
     return bars, bar_values, bar_positions, bar_lengths, maxs, mins
 
 
-def bar_plot(MODULE1, filename, title):
+def bar_plot(MODULE1, filename):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(12, 5)
     fig.set_dpi(100)
-    fig.suptitle(title)
-
 
     complete = [block for block in MODULE1.by_completion(True).blocks if block.min_trials < 0]
     bars, bar_values, bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[0], complete, 'Completo')
@@ -89,9 +87,12 @@ def bar_plot(MODULE1, filename, title):
     plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()
 
+"""
+Número médio de sessões dos passos do módulo 1
+completo e incompleto
+"""
 def plot():
-    bar_plot(MODULE1, 'Fig24',
-        'Número médio de sessões dos passos do módulo 1\ncompleto e incompleto')
+    bar_plot(MODULE1, 'Fig24')
 
 if __name__ == "__main__":
     plot()

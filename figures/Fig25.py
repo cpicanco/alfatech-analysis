@@ -22,21 +22,11 @@ def boxplot_blocks(ax, blocks, title):
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
 
-    # Annotate mean, min, and max for each block
-    for i, box in enumerate(bp['boxes']):
-        pos = bar_positions[i]
-        mean_val = np.mean(data[i])
-        min_val = np.min(data[i])
-        max_val = np.max(data[i])
-
-        # ax.text(pos, 1 , f'M={mean_val:.1f}%', ha='center', color='black')
-        # ax.text(pos, min_val - 0.01, f'{min_val:.1f}%', ha='center', color='black')
-        # ax.text(pos, max_val + 0.01, f'{max_val:.1f}%', ha='center', color='black')
 
 def plot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
 
-    bar_values, bar_stds, bar_lengths, bar_medians, mins, maxs = statistics_from_blocks(blocks, 'sessions')
+    bar_values, _, bar_lengths, _, mins, maxs = statistics_from_blocks(blocks, 'sessions')
 
     ax.set_ylim(0, 3)
     ax.set_title(title)
@@ -53,12 +43,10 @@ def plot_blocks(ax, blocks, title):
     return bars, bar_values, bar_positions, bar_lengths, maxs, mins
 
 
-def bar_plot(MODULE, filename, title):
+def bar_plot(MODULE, filename):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(12*4, 5)
     fig.set_dpi(100)
-    fig.suptitle(title)
-
 
     complete = [block for block in MODULE.by_completion(True).blocks if block.min_trials < 0]
     bars, bar_values, bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[0], complete, 'Completo')
@@ -86,12 +74,16 @@ def bar_plot(MODULE, filename, title):
     axs[1].annotate(f'= máx', (x_pos+1, y_pos -0.15), ha='center', color='black', fontsize=8)
     axs[1].annotate(f'= mín', (x_pos+1, y_pos -0.3), ha='center', color='black', fontsize=8)
     plt.tight_layout()
-    plt.savefig(output_path('Fig25'), bbox_inches='tight')
+    plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()
 
+"""
+Número médio de sessões dos passos do Módulo 2
+completo e incompleto'
+"""
+
 def plot():
-    bar_plot(MODULE2, 'Fig25',
-       'Número médio de sessões dos passos do módulo 2\ncompleto e incompleto')
+    bar_plot(MODULE2, 'Fig25')
 
 if __name__ == "__main__":
     plot()

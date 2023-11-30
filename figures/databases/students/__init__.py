@@ -117,6 +117,12 @@ class Student:
     def get_first_and_last_acoles(self):
         return 0, len(self.acoles) - 1
 
+    def get_first_and_second_acoles(self):
+        return 0, 1
+
+    def has_two_acoles_first_incomplete(self):
+        return len(self.acoles) > 1 and not self.acoles_is_complete[0]
+
 class Students_Container(Base_Container):
     def __init__(self, students = [], **kwargs):
         super(Students_Container, self).__init__(**kwargs)
@@ -252,7 +258,7 @@ if Students_Container.cache_exists():
 else:
     print('Populating Students cache')
     students = Students_Container()
-    correct_school_years = read_csv(os.path.join('databases', 'students', 'students_with_correct_school_year.tsv'))
+    correct_school_years = read_csv(os.path.join('figures', 'databases', 'students', 'students_with_correct_school_year.tsv'))
     with geic_db.connect() as connection:
         students_template = template_from_name('students_from_alphatech')
         students.populate(connection.execute(text(students_template)).fetchall(), correct_school_years)

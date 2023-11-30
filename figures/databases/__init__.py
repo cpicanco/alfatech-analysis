@@ -242,7 +242,7 @@ def populate_module_data(MODULE):
                         student_block.data['students'].append(student)
                         student_block.data['trials'].append(trials)
                         student_block.data['percentages'].append(percentage)
-                        block.data['sessions'].append(sessions)
+                        student_block.data['sessions'].append(sessions)
                     else:
                         percentage = None
                         trials_len = None

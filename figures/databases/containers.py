@@ -24,14 +24,14 @@ class Block:
         self.frequency_range = None
 
     def delta(self, block):
-        result = self.clone()
-        result.data['deltas'] = []
-        for percentages, block_percentages in zip(result.data['percentages'], block.data['percentages']):
-            if percentages is not None and block_percentages is not None:
-                result.data['deltas'].append(percentages - block_percentages)
+        # result = self.clone()
+        self.data['deltas'] = []
+        for percentages2, percentages1 in zip(self.data['percentages'], block.data['percentages']):
+            if percentages2 is not None and percentages1 is not None:
+                self.data['deltas'].append(percentages2 - percentages1)
             else:
-                result.data['deltas'].append(None)
-        return result
+                self.data['deltas'].append(None)
+        return self
 
     def clone(self):
         clone = Block(self.id, self.legend, self.code, self.min_trials)
@@ -106,10 +106,10 @@ class Container(Base_Container):
         #     students.summary()
 
         # print('\nStudents data points: ')
-        students = Students_Container(students=[s for s in self.blocks[0].data["students"] if s is not None])
-        students.summary_by_frequency(self.frequency_range)
-        for block in self.blocks:
-            print(f'{block.legend}: {len([s for s in block.data["students"] if s is not None])}')
+        # students = Students_Container(students=[s for s in self.blocks[0].data["students"] if s is not None])
+        # students.summary_by_frequency(self.frequency_range)
+        # for block in self.blocks:
+        #     print(f'{block.legend}: {len([s for s in block.data["students"] if s is not None])}')
 
         # print('\nCompleted Modules:')
         # for completed, count in self.completions(count=True).items():
@@ -126,6 +126,10 @@ class Container(Base_Container):
         # print('\nSexes:')
         # for sex, count in self.sexes(count=True).items():
         #     print(f'{sex}: {count} data points')
+
+        print('\nSchool Years:')
+        for school_year, count in self.school_years(count=True).items():
+            print(f'{school_year}: {count} data points')
 
     def completions(self, count=False):
         completed_modules = []
