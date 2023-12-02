@@ -61,5 +61,37 @@ def three_top_one_bottom():
     plt.show()
 
 
+def multicategory_bar_chart():
+    import matplotlib.pyplot as plt
+
+    # Your data
+    unid1_positions = [0, 1, 2, 3, 4]
+    unid2_positions = [5, 6, 7, 8]
+    unid3_positions = [9, 10, 11, 12]
+    unid4_positions = [13, 14, 15, 16]
+    unid5_positions = [17, 18, 19]
+
+    # Combine positions and values
+    all_positions = [unid1_positions, unid2_positions, unid3_positions, unid4_positions, unid5_positions]
+    bar_values = [5, 3, 4, 7, 2, 4, 6, 8, 3, 5, 7, 2, 4, 6, 8, 3, 5, 7, 2, 4]
+
+    # Create a figure and axis
+    fig, ax = plt.subplots()
+
+    # Set width for the bars
+    bar_width = 0.2  # Adjust this based on your preference
+
+    # Plot the bars
+    for i, positions in enumerate(all_positions):
+        ax.bar([pos + i * bar_width for pos in positions], bar_values[i], width=bar_width, label=f'Unid{i+1}')
+
+    # Add labels and legend
+    ax.set_xlabel('Bar Positions')
+    ax.set_ylabel('Bar Values')
+    ax.legend()
+
+    # Show the plot
+    plt.show()
+
 if __name__ == "__main__":
-    bar_plot_two_groups()
+    multicategory_bar_chart()

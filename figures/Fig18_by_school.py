@@ -1,15 +1,17 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
+from databases.students import students
 from databases import ACOLE1
 from methods import statistics_from_block, output_path
 from base import default_axis_config, upper_summary
 from Fig17 import top_labels
 from colors import color_median
 
-filename = 'Fig18_idade'
+filename = 'Fig18_escola'
 
 def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
-    num_items_in_block = len(grouped_data[0])
+    num_schools = len(grouped_data[0])
     num_blocks = len(grouped_data)
     ax.set_title(title, va='top', y=1.3)
     default_axis_config(ax)
@@ -26,7 +28,7 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     colors = []
     for i, block_group in enumerate(grouped_data):
         for j, block in enumerate(block_group):
-            bar_position = (i*2.0) + (i * num_blocks + j) * bar_width
+            bar_position = (i*2.6) + (i * num_blocks + j) * bar_width
             bar_values, _, bar_length, bar_median, _, _ = statistics_from_block(block)
             # save qq plot for visual inspection
             # qq_plot(block, filename+'_'+str(block.school))
@@ -34,7 +36,7 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
                 bar_positions.append(bar_position)
 
             if i == 0:
-                labels.append(str(block.age_group))
+                labels.append(block.school)
 
             # Annotate mean on top of each bar
             colors.append(j)
@@ -47,8 +49,8 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     sorted_lengths = []
     sorted_medians = []
     for i in range(num_blocks):
-        start_index = i * num_items_in_block
-        end_index = (i + 1) * num_items_in_block
+        start_index = i * num_schools
+        end_index = (i + 1) * num_schools
 
         ps = positions[start_index:end_index]
         v = values[start_index:end_index]
@@ -71,28 +73,18 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     upper_summary(ax, positions, sorted_values, sorted_medians, sorted_lengths, x=-0.5, show_label=write_start_annotation)
 
     # Set x-axis ticks and labels
-    bar_positions = [ i+(bar_width*num_items_in_block/2) - (bar_width/2) for i in bar_positions]
+    bar_positions = [ i+(bar_width*num_schools/2) - (bar_width/2) for i in bar_positions]
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
 
 def bar_plot(ACOLE):
     fig, axs = plt.subplots(1, 2, sharey=True)
-    fig.set_size_inches(16, 5)
+    fig.set_size_inches(18, 5)
     fig.set_dpi(100)
 
-    # 7: 3 data points
-    # 8: 111 data points
-    # 9: 496 data points
-    # 10: 850 data points
-    # 11: 685 data points
-    # 12: 321 data points
-    # 13: 141 data points
-    # 14: 24 data points
-    # 15: 6 data points
-    # 19: 3 data points
-    grouped_ages = [[7, 8], [9], [10], [11], [12], [13, 14, 15, 19]]
+    schools = [k for k in students.schools(True).keys()]
 
-    all_data = [ACOLE.by_age(ages) for ages in grouped_ages]
+    all_data = [ACOLE.by_school(school) for school in schools]
 
     leitura = []
     ditado_composicao = []
@@ -133,15 +125,15 @@ def bar_plot(ACOLE):
     plot_blocks(axs[1], difficult_blocks, top_labels[1].replace('\n', ' '))
 
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(grouped_ages))
-    fig.text(0.5, -0.05, 'Idade', ha='center', va='center', fontsize=12)
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.2), ncol=3)
+    fig.text(0.5, -0.25, 'Escolas', ha='center', va='center', fontsize=12)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()
 
 """
     Porcentagem média de acertos da primeira ACOLE
-    com palavras regulares e com dificuldades ortográficas, por idade
+    com palavras regulares e com dificuldades ortográficas, por escola
 """
 def plot():
     bar_plot(ACOLE1)

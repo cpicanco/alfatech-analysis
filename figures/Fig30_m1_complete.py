@@ -5,6 +5,7 @@ from databases.students import students
 from databases import ACOLE1, ACOLE2
 from methods import output_path
 from base import default_axis_config
+from colors import color1, color2
 
 top_labels = ['Leitura', 'Ditado por composição', 'Ditado manuscrito']
 
@@ -38,8 +39,8 @@ def plot_blocks(ax, blocks, label, y_padding=1.0):
     default_axis_config(ax, False)
 
     legends = [block.legend for block in blocks][0::2]
-    bars = ax.bar(bar_positions[::2], means[::2], width=bar_width, color='salmon', label='Sem dificuldades ortográficas')
-    bars = ax.bar(bar_positions[1::2]-bar_width, means[1::2], width=bar_width, color='skyblue', label='Com dificuldades ortográficas')
+    bars = ax.bar(bar_positions[::2], means[::2], width=bar_width, color=color1, label='Palavras regulares CV')
+    bars = ax.bar(bar_positions[1::2]-bar_width, means[1::2], width=bar_width, color=color2, label='Palavras com\ndificuldades ortográficas')
 
     ax.set_xticks(np.array(bar_positions[1::2]) - bar_width - bar_width / 2)
     ax.set_xticklabels(legends, ha='center')
@@ -74,6 +75,7 @@ def bar_plot(ACOLE1, ACOLE2, use_boxplot, filename):
         for block in group:
             block.legend = str([block.frequency_range.low, block.frequency_range.high])
 
+    axs[1].set_ylabel('Diferença da porcentagem média de acertos')
     for (ax, label, data) in zip(axs, top_labels, groups):
         if use_boxplot:
             boxplot_blocks(ax, data, label)
@@ -118,8 +120,8 @@ def plot():
     com estudantes que avançaram até as palavras com dificuldades ortográficas na primeira ACOLE,
     or faixa de frequência no projeto
     """
-    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=False, filename='Fig30')
-    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=True, filename='Fig30')
+    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=False, filename='Fig30_m1_completo_acole_completa_ou_incompleta')
+    bar_plot(ACOLE_1, ACOLE_2, use_boxplot=True, filename='Fig30_m1_completo_acole_completa_ou_incompleta')
 
 if __name__ == "__main__":
    plot()

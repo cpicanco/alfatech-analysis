@@ -64,17 +64,20 @@ def plot_blocks_pairs(ax, blocks, title):
     ax.set_xticklabels(tick_labels, ha='center')
 
 
-def do_plot(ACOLE1, MODULE1, ACOLE2, use_boxplot, filename, title):
+def do_plot(ACOLE1, MODULE1, ACOLE2, use_boxplot, filename):
     fig, axs = plt.subplots(3, 1, sharey=True)
     fig.set_size_inches(5, 10)
     fig.set_dpi(100)
 
-    fig.suptitle(title, fontsize=14)
+    for ax in axs:
+        ax.set_ylabel('Porcentagem média de acertos')
 
-    ACOLE1.LEITURA.legend = 'ACOLE'
-    ACOLE2.LEITURA.legend = 'ACOLE'
-    ACOLE1.LEITURA_DIFICULDADES.legend = 'ACOLE\nDificuldades'
-    ACOLE2.LEITURA_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    regular_acole_label = 'ACOLE\nRegulares\nCV'
+    difficult_acole_label = 'ACOLE\nDificuldades'
+    ACOLE1.LEITURA.legend = regular_acole_label
+    ACOLE2.LEITURA.legend = regular_acole_label
+    ACOLE1.LEITURA_DIFICULDADES.legend = difficult_acole_label
+    ACOLE2.LEITURA_DIFICULDADES.legend = difficult_acole_label
     MODULE1.EXTAI.legend = 'Módulo 1\nt. ext. 1'
     MODULE1.EXTAF.legend = 'Módulo 1\nt. ext. 1'
     MODULE1.EXTBI.legend = 'Módulo 1\nt. ext. 2'
@@ -90,10 +93,10 @@ def do_plot(ACOLE1, MODULE1, ACOLE2, use_boxplot, filename, title):
     else:
         plot_blocks_pairs(axs[0], reading, 'Leitura')
 
-    ACOLE1.DITADO_COMPOSICAO.legend = 'ACOLE'
-    ACOLE2.DITADO_COMPOSICAO.legend = 'ACOLE'
-    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
-    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    ACOLE1.DITADO_COMPOSICAO.legend = regular_acole_label
+    ACOLE2.DITADO_COMPOSICAO.legend = regular_acole_label
+    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = difficult_acole_label
+    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = difficult_acole_label
     MODULE1.EXTDI.legend = 'Módulo 1\nt. ext.'
     MODULE1.EXTDF.legend = 'Módulo 1\nt. ext.'
 
@@ -108,10 +111,10 @@ def do_plot(ACOLE1, MODULE1, ACOLE2, use_boxplot, filename, title):
     else:
         plot_blocks_pairs(axs[1], dictation, 'Ditado por composição')
 
-    ACOLE1.DITADO_MANUSCRITO.legend = 'ACOLE'
-    ACOLE2.DITADO_MANUSCRITO.legend = 'ACOLE'
-    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
-    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = 'ACOLE\nDificuldades'
+    ACOLE1.DITADO_MANUSCRITO.legend = regular_acole_label
+    ACOLE2.DITADO_MANUSCRITO.legend = regular_acole_label
+    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = difficult_acole_label
+    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = difficult_acole_label
     MODULE1.EXTCI.legend = 'Módulo 1\nt. ext.'
     MODULE1.EXTCF.legend = 'Módulo 1\nt. ext.'
 
@@ -159,12 +162,12 @@ def plot():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
 
-    do_plot(ACOLE_1, MODULE_1, ACOLE_2,
-             filename='Fig27b', use_boxplot=False,
-             title='Porcentagem média de acertos na ACOLE inicial,\ntestes de Módulo 1 e ACOLE final')
-    do_plot(ACOLE_1, MODULE_1, ACOLE_2, use_boxplot=True,
-             filename='Fig27b',
-             title='Distribuição da porcentagem de acertos na ACOLE inicial,\ntestes de Módulo 1 e ACOLE final')
+    """
+    Porcentagem média de acertos na ACOLE inicial
+    testes de Módulo 1 e ACOLE final'
+    """
+    do_plot(ACOLE_1, MODULE_1, ACOLE_2, use_boxplot=False, filename='Fig27b')
+    do_plot(ACOLE_1, MODULE_1, ACOLE_2, use_boxplot=True,  filename='Fig27b')
 
 if __name__ == "__main__":
     plot()

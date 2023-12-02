@@ -3,6 +3,7 @@ import numpy as np
 
 from databases import MODULE2
 from methods import statistics_from_blocks, output_path
+from base import upper_summary_2
 
 def boxplot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
@@ -28,51 +29,41 @@ def plot_blocks(ax, blocks, title):
 
     bar_values, _, bar_lengths, _, mins, maxs = statistics_from_blocks(blocks, 'sessions')
 
-    ax.set_ylim(0, 3)
-    ax.set_title(title)
+    bar_width = 0.8
+    ax.set_ylim(0, 1.5)
+    ax.set_title(title, y=1.3)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
-    bars = ax.bar(bar_positions, bar_values)
+    colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue',
+              'lightblue', 'lightblue','lightblue','lightblue'] * 10
 
-    ax.set_xticks(bar_positions + 0.4)
-    ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
-     # Annotate mean and sigma on top of each column
-    return bars, bar_values, bar_positions, bar_lengths, maxs, mins
+    ax.bar(bar_positions, bar_values, bar_width, color=colors)
+
+    ax.set_xticks(bar_positions[::4]-bar_width/2)
+    ax.set_xticklabels([block.legend.replace('Passo 1 (', '').replace(')','') for block in blocks][::4], ha='left')
+
+    return bar_positions, bar_lengths, maxs, mins
 
 
 def bar_plot(MODULE, filename):
-    fig, axs = plt.subplots(1, 2, sharey=True)
-    fig.set_size_inches(12*4, 5)
+    fig, axs = plt.subplots(2, 1, sharey=True)
+    fig.set_size_inches(20, 10)
     fig.set_dpi(100)
 
+    axs[0].set_ylabel('Porcentagem média de acertos')
+    axs[1].set_ylabel('Porcentagem média de acertos')
     complete = [block for block in MODULE.by_completion(True).blocks if block.min_trials < 0]
-    bars, bar_values, bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[0], complete, 'Completo')
-
-    for b, v, p, _len, _max, _min in zip(bars, bar_values, bar_positions, bar_lengths, maxs, mins):
-        x_pos = p
-        y_pos = v + 0.4
-        axs[0].text(x_pos, y_pos, f'{_max}', ha='center', color='black', fontsize=8)
-        axs[0].text(x_pos, y_pos - 0.15, f'{_min}', ha='center', color='black', fontsize=8)
-
-    axs[0].text(10, 2.8, f'n = {bar_lengths[0]}', ha='center', color='black', fontsize=10)
-    axs[0].annotate(f'= máx', (x_pos+1, y_pos), ha='center', color='black', fontsize=8)
-    axs[0].annotate(f'= mín', (x_pos+1, y_pos -0.15), ha='center', color='black', fontsize=8)
+    bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[0], complete, 'Completo')
+    upper_summary_2(axs[0], bar_positions, bar_lengths, mins, maxs,
+                     x=-0.5, y=1.75, line_height=0.125, show_label=True, show_n=False)
 
     incomplete = [block for block in MODULE.by_completion(False).blocks if block.min_trials < 0]
-    bars, bar_values, bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[1], incomplete, 'Incompleto')
-    for b, v, p, _len, _max, _min in zip(bars, bar_values, bar_positions, bar_lengths, maxs, mins):
-        x_pos = p
-        y_pos = v + 0.4
-        axs[1].text(x_pos, 2.8, f'{_len}', ha='center', color='black', fontsize=8)
-        axs[1].text(x_pos, y_pos - 0.15, f'{_max}', ha='center', color='black', fontsize=8)
-        axs[1].text(x_pos, y_pos - 0.3, f'{_min}', ha='center', color='black', fontsize=8)
-
-    axs[1].text(x_pos+1, 2.8, f'= n ', ha='center', color='black', fontsize=10)
-    axs[1].annotate(f'= máx', (x_pos+1, y_pos -0.15), ha='center', color='black', fontsize=8)
-    axs[1].annotate(f'= mín', (x_pos+1, y_pos -0.3), ha='center', color='black', fontsize=8)
+    bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[1], incomplete, 'Incompleto')
+    upper_summary_2(axs[1], bar_positions, bar_lengths, mins, maxs,
+                     x=-0.5, y=1.75, line_height=0.125, show_label=True)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()

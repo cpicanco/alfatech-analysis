@@ -12,9 +12,9 @@ def plot_blocks(ax, blocks):
     default_axis_config(ax)
     bar_positions = np.arange(len(blocks))*0.8 + 0.2
     bar_width = 0.4
-    data = [[p for p in block.data['percentages'] if p is not None] for block in blocks]
-    boxprops = dict(linewidth=1, color='black')
-    medianprops = dict(linewidth=1, color='black')
+    # data = [[p for p in block.data['percentages'] if p is not None] for block in blocks]
+    # boxprops = dict(linewidth=1, color='black')
+    # medianprops = dict(linewidth=1, color='black')
 
     values, _, lens, _, mins, maxs = statistics_from_blocks(blocks)
 
@@ -87,14 +87,17 @@ def bar_plot(ACOLES, filename):
     plt.close()
 
 def plot():
-    opt.extension = '.pdf'
-    opt.cd('students')
-    for student in students:
-        if student.id == 6083:
-            if (len(student.acoles) > 0) and (len(student.acoles) < 4):
-                bar_plot(student.acoles, 'Fig17_student_'+str(student.id))
+    print()
+    # for student in students:
+    #     print(student.school.name)
 
-    opt.back()
+    # opt.extension = '.pdf'
+    # opt.cd('students')
+    # for student in students:
+    #     if student.id == 6083:
+    #         if (len(student.acoles) > 0) and (len(student.acoles) < 4):
+    #             bar_plot(student.acoles, 'Fig17_student_'+str(student.id))
+    # opt.back()
 
 if __name__ == "__main__":
     plot()

@@ -1,7 +1,5 @@
 from collections import Counter
 
-import numpy as np
-
 from .students import Students_Container
 from .ranges import RangeContainer
 from .base_container import Base_Container
@@ -22,13 +20,19 @@ class Block:
         self.sex = None
         self.completed = {'m1': None, 'm2': None, 'm3': None}
         self.frequency_range = None
+        self.school = None
+        self.school_year = None
+        self.date = []
 
     def delta(self, block):
         # result = self.clone()
         self.data['deltas'] = []
         for percentages2, percentages1 in zip(self.data['percentages'], block.data['percentages']):
-            if percentages2 is not None and percentages1 is not None:
-                self.data['deltas'].append(percentages2 - percentages1)
+            if percentages2 is not None:
+                if percentages1 is not None:
+                    self.data['deltas'].append(percentages2 - percentages1)
+                else:
+                    self.data['deltas'].append(percentages2 - 0)
             else:
                 self.data['deltas'].append(None)
         return self
@@ -53,6 +57,8 @@ class Container(Base_Container):
         self.sex = None
         self.completed = {'m1': None, 'm2': None, 'm3': None}
         self.frequency_range = None
+        self.school = None
+        self.school_year = None
 
     def _filter(self, filter_function, filtered):
         for block, block_filtered in zip(self.blocks, filtered.blocks):
@@ -60,6 +66,9 @@ class Container(Base_Container):
             block_filtered.forwarding = block.forwarding
             block_filtered.sex = block.sex
             block_filtered.age_group = block.age_group
+            block_filtered.school = block.school
+            block_filtered.school_year = block.school_year
+            block_filtered.frequency_range = block.frequency_range
             for student, trials, percentage, sessions in zip(block.data['students'], block.data['trials'], block.data['percentages'], block.data['sessions']):
                 if student is not None and filter_function(student):
                     block_filtered.data['students'].append(student)
@@ -119,17 +128,21 @@ class Container(Base_Container):
         # for module, count in self.modules(count=True).items():
         #     print(f'{module}: {count} data points')
 
-        # print('\nAges:')
-        # for age, count in self.ages(count=True).items():
-        #     print(f'{age}: {count} data points')
+        print('\nAges:')
+        for age, count in self.ages(count=True).items():
+            print(f'{age}: {count} data points')
 
-        # print('\nSexes:')
-        # for sex, count in self.sexes(count=True).items():
-        #     print(f'{sex}: {count} data points')
+        print('\nSexes:')
+        for sex, count in self.sexes(count=True).items():
+            print(f'{sex}: {count} data points')
 
         print('\nSchool Years:')
         for school_year, count in self.school_years(count=True).items():
             print(f'{school_year}: {count} data points')
+
+        print('\nSchools:')
+        for school, count in self.schools(count=True).items():
+            print(f'{school}: {count} data points')
 
     def completions(self, count=False):
         completed_modules = []
@@ -196,6 +209,15 @@ class Container(Base_Container):
         else:
             return school_years
 
+    def schools(self, count=False):
+        schools = []
+        for student in self.students():
+            schools.append(student.school.name)
+        if count:
+            return dict(sorted(Counter(schools).items()))
+        else:
+            return schools
+
     def by_sex(self, sex):
         allowed_sexes = ['M', 'F']
         filter_function = {
@@ -241,6 +263,14 @@ class Container(Base_Container):
         filtered.completed[f'm{module}'] = completed
         for block in filtered.blocks:
             block.completed[f'm{module}'] = completed
+        return filtered
+
+    def by_school(self, school):
+        filter_function = lambda student: student.school.name == school
+        filtered = self._student_filter(filter_function)
+        filtered.school = school
+        for block in filtered.blocks:
+            block.school = school
         return filtered
 
     def by_frequency(self, frequency_range):
@@ -328,6 +358,7 @@ class MODULE1_Container(Container):
             self.blocks.append(value)
 
         self.id = MODULO1_ID
+        self.name = 'Módulo 1'
 
     def _student_filter(self, filter_function):
         return self._filter(filter_function, MODULE1_Container())
@@ -447,6 +478,7 @@ class MODULE2_Container(Container):
             self.blocks.append(value)
 
         self.id = MODULO2_ID
+        self.name = 'Módulo 2'
 
     def _student_filter(self, filter_function):
         return self._filter(filter_function, MODULE2_Container())
@@ -495,6 +527,7 @@ class MODULE3_Container(Container):
             self.blocks.append(value)
 
         self.id = MODULO3_ID
+        self.name = 'Módulo 3'
 
     def _student_filter(self, filter_function):
           return self._filter(filter_function, MODULE3_Container())

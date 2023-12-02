@@ -25,14 +25,10 @@ class OutputFiles:
 opt = OutputFiles()
 
 def statistics_from_block(block, key='percentages'):
+    excluded_students = []
     data_points = block.data[key]
-    participants = block.data['students']
-    for d, p in zip(data_points, participants):
-        if d is not None:
-            if d > 10:
-                print(p.id, d)
-
-    data_points = [p for p in data_points if p is not None]
+    students = block.data['students']
+    data_points = [d for d, p in zip(data_points, students) if d is not None and p.id not in excluded_students]
     bar_length = len(data_points)
     if bar_length > 0:
         bar_value = np.mean(data_points)
