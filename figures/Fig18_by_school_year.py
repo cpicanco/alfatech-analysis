@@ -8,46 +8,73 @@ from colors import color_median
 
 filename = 'Fig18_ano_escolar'
 
-def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
-    num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
+def plot_blocks(ax, grouped_data, title, adjustment=0.8, write_start_annotation=False):
+    num_items_in_block = len(grouped_data[0])
     num_blocks = len(grouped_data)
+    ax.set_title(title, va='top', y=1.3)
+    default_axis_config(ax)
 
-    bar_width = 0.7  # Adjust the width based on your preference
+    bar_positions = []
+    bar_width = 0.4  # Adjust the width based on your preference
     bar_positions = []
     positions = []
     values = []
     lengths = []
     medians = []
+
+    labels = []
+    colors = []
     for i, block_group in enumerate(grouped_data):
-        for j, age_block in enumerate(block_group):
-            bar_position = (i*1.3) + (i * num_blocks + j) * bar_width
-            bar_values, _, bar_length, bar_median, _, _ = statistics_from_block(age_block)
+        for j, block in enumerate(block_group):
+            bar_position = (i*adjustment) + (i * num_blocks + j) * bar_width
+            bar_values, _, bar_length, bar_median, _, _ = statistics_from_block(block)
             # save qq plot for visual inspection
-            # qq_plot(age_block, filename+'_'+str(age_block.age_group))
+            # qq_plot(block, filename+'_'+str(block.school))
             if j == 0:
                 bar_positions.append(bar_position)
 
             if i == 0:
-                bars = ax.bar(bar_position, bar_values, width=bar_width-0.05, label=f'{age_block.school_year}', color=f'C{j}')
-            else:
-                bars = ax.bar(bar_position, bar_values, width=bar_width-0.05, color=f'C{j}')
-            ax.hlines(bar_median, bars[0].get_x(), bars[0].get_x() + bars[0].get_width(), linestyles='solid', color=color_median)
+                labels.append(str(block.school_year))
 
+            # Annotate mean on top of each bar
+            colors.append(j)
             positions.append(bar_position)
             values.append(bar_values)
             lengths.append(bar_length)
             medians.append(bar_median)
 
-    upper_summary(ax, positions, values, medians, lengths, x=-0.5, show_label=write_start_annotation)
+    sorted_values = []
+    sorted_lengths = []
+    sorted_medians = []
+    for i in range(num_blocks):
+        start_index = i * num_items_in_block
+        end_index = (i + 1) * num_items_in_block
 
-    ax.set_title(title, va='top', y=1.3)
-    default_axis_config(ax)
+        ps = positions[start_index:end_index]
+        v = values[start_index:end_index]
+        l = lengths[start_index:end_index]
+        m = medians[start_index:end_index]
+        c = colors[start_index:end_index]
+
+        sorted_v, sorted_l, sorted_m, sorted_cl = zip(*sorted(list(zip(v, l, m, c)), key=lambda x: x[0]))
+        sorted_values.extend(sorted_v)
+        sorted_lengths.extend(sorted_l)
+        sorted_medians.extend(sorted_m)
+        # now plot and do not forget to add labels
+        for j, (p, v, l, m, cl) in enumerate(zip(ps, sorted_v, sorted_l, sorted_m, sorted_cl)):
+            if i == 0:
+                bars = ax.bar(p, v, width=bar_width-0.05, label=labels[j], color=f'C{cl}')
+            else:
+                bars = ax.bar(p, v, width=bar_width-0.05, color=f'C{cl}')
+            ax.hlines(m, bars[0].get_x(), bars[0].get_x() + bars[0].get_width(), linestyles='solid', color=color_median)
+
+    upper_summary(ax, positions, sorted_values, sorted_medians, sorted_lengths, x=-0.5, show_label=write_start_annotation)
 
     # Set x-axis ticks and labels
-    bar_positions = [ i+(bar_width*num_age_groups/2) - (bar_width/2) for i in bar_positions]
+    bar_positions = [ i+(bar_width*num_items_in_block/2) - (bar_width/2) for i in bar_positions]
     ax.set_xticks(bar_positions)
-    x_labels = [block[0].legend.replace('Ditado ', 'Ditado\n').replace('por ', 'por\n').replace('*', '') for block in grouped_data]
-    ax.set_xticklabels(x_labels)
+    ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
+
 
 def bar_plot(ACOLE):
     fig, axs = plt.subplots(1, 2, sharey=True)

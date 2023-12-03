@@ -6,6 +6,7 @@ from databases.students import students
 from databases import MODULE2, ACOLE1, ACOLE2
 
 from methods import statistics_from_blocks, output_path
+from Fig27_m1_tests import plot_blocks_pairs
 
 def boxplot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
@@ -25,17 +26,6 @@ def boxplot_blocks(ax, blocks, title):
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
 
-    # Annotate mean, min, and max for each block
-    for i, box in enumerate(bp['boxes']):
-        pos = bar_positions[i]
-        mean_val = np.mean(data[i])
-        min_val = np.min(data[i])
-        max_val = np.max(data[i])
-
-        # ax.text(pos, 1 , f'M={mean_val:.1f}%', ha='center', color='black')
-        # ax.text(pos, min_val - 0.01, f'{min_val:.1f}%', ha='center', color='black')
-        # ax.text(pos, max_val + 0.01, f'{max_val:.1f}%', ha='center', color='black')
-
 def plot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
 
@@ -53,43 +43,39 @@ def plot_blocks(ax, blocks, title):
     ax.set_xticks(bar_positions + 0.4)
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
 
-def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename, title):
-    initial_acole_label = 'ACOLE inicial'
-    initial_acole_difficulties_label = 'ACOLE inicial - Dificuldades'
-    final_acole_label = 'ACOLE final'
-    final_acole_difficulties_label = 'ACOLE final - Dificuldades'
-
-    ACOLE1.LEITURA.legend = initial_acole_label
-    ACOLE1.LEITURA_DIFICULDADES.legend = initial_acole_difficulties_label
-    ACOLE1.DITADO_COMPOSICAO.legend = initial_acole_label
-    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = initial_acole_difficulties_label
-    ACOLE1.DITADO_MANUSCRITO.legend = initial_acole_label
-    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = initial_acole_difficulties_label
-
-    ACOLE2.LEITURA.legend = final_acole_label
-    ACOLE2.LEITURA_DIFICULDADES.legend = final_acole_difficulties_label
-    ACOLE2.DITADO_COMPOSICAO.legend = final_acole_label
-    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = final_acole_difficulties_label
-    ACOLE2.DITADO_MANUSCRITO.legend = final_acole_label
-    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = final_acole_difficulties_label
+def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename):
+    regular_acole_label = 'ACOLE\nRegulares\nCV'
+    difficult_acole_label = 'ACOLE\nDificuldades'
+    ACOLE1.LEITURA.legend = regular_acole_label
+    ACOLE2.LEITURA.legend = regular_acole_label
+    ACOLE1.LEITURA_DIFICULDADES.legend = difficult_acole_label
+    ACOLE2.LEITURA_DIFICULDADES.legend = difficult_acole_label
+    ACOLE1.DITADO_COMPOSICAO.legend = regular_acole_label
+    ACOLE2.DITADO_COMPOSICAO.legend = regular_acole_label
+    ACOLE1.DITADO_COMPOSICAO_DIFICULDADES.legend = difficult_acole_label
+    ACOLE2.DITADO_COMPOSICAO_DIFICULDADES.legend = difficult_acole_label
+    ACOLE1.DITADO_MANUSCRITO.legend = regular_acole_label
+    ACOLE2.DITADO_MANUSCRITO.legend = regular_acole_label
+    ACOLE1.DITADO_MANUSCRITO_DIFICULDADES.legend = difficult_acole_label
+    ACOLE2.DITADO_MANUSCRITO_DIFICULDADES.legend = difficult_acole_label
 
     # Get the data from
     reading = [
         ACOLE1.LEITURA,
-        ACOLE1.LEITURA_DIFICULDADES,
         ACOLE2.LEITURA,
+        ACOLE1.LEITURA_DIFICULDADES,
         ACOLE2.LEITURA_DIFICULDADES]
 
     composition = [
         ACOLE1.DITADO_COMPOSICAO,
-        ACOLE1.DITADO_COMPOSICAO_DIFICULDADES,
         ACOLE2.DITADO_COMPOSICAO,
+        ACOLE1.DITADO_COMPOSICAO_DIFICULDADES,
         ACOLE2.DITADO_COMPOSICAO_DIFICULDADES]
 
     manuscript = [
         ACOLE1.DITADO_MANUSCRITO,
-        ACOLE1.DITADO_MANUSCRITO_DIFICULDADES,
         ACOLE2.DITADO_MANUSCRITO,
+        ACOLE1.DITADO_MANUSCRITO_DIFICULDADES,
         ACOLE2.DITADO_MANUSCRITO_DIFICULDADES]
 
     # Get the data for the big axis
@@ -97,7 +83,6 @@ def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename, title):
 
     fig = plt.figure(figsize=(8, 8))
     fig.set_dpi(300)
-    fig.suptitle(title, fontsize=14)
     gs = GridSpec(2, 3, height_ratios=[1.5, 1.5], width_ratios=[1, 1, 1])
 
     # Create three axes on the top row
@@ -108,6 +93,8 @@ def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename, title):
     # Create a larger axis at the bottom that spans all three columns
     ax_big = fig.add_subplot(gs[1, :], sharey=ax1)
 
+    ax1.set_ylabel('Porcentagem média de acertos')
+    ax_big.set_ylabel('Porcentagem média de acertos')
     # Add content to the axes (you can customize this based on your data)
     if use_boxplot:
         boxplot_blocks(ax1, reading, 'Leitura')
@@ -115,9 +102,9 @@ def bar_plot(ACOLE1, MODULE2, ACOLE2, use_boxplot, filename, title):
         boxplot_blocks(ax3, manuscript, 'Ditado manuscrito')
         boxplot_blocks(ax_big, module2, 'Módulo 2')
     else:
-        plot_blocks(ax1, reading, 'Leitura')
-        plot_blocks(ax2, composition, 'Ditado por composição')
-        plot_blocks(ax3, manuscript, 'Ditado manuscrito')
+        plot_blocks_pairs(ax1, reading, 'Leitura')
+        plot_blocks_pairs(ax2, composition, 'Ditado por composição')
+        plot_blocks_pairs(ax3, manuscript, 'Ditado manuscrito')
         plot_blocks(ax_big, module2, 'Módulo 2')
 
     fig.tight_layout()
@@ -135,7 +122,7 @@ def plot():
     MODULE_2 = MODULE2.create()
     for student in students:
         if len(student.acoles) > 1:
-            if len(student.modules) > 0:
+            if student.modules[1] is not None:
                 if student.has_m2:
                     for block, student_block in zip(ACOLE_1.blocks, student.acoles[0].blocks):
                         for key, data in student_block.data.items():
@@ -147,15 +134,17 @@ def plot():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
 
-                    for block, student_block in zip(MODULE_2.blocks, student.modules[0].blocks):
+                    for block, student_block in zip(MODULE_2.blocks, student.modules[1].blocks):
                         for key, data in student_block.data.items():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
-
-    bar_plot(ACOLE_1, MODULE_2, ACOLE_2, use_boxplot=False, filename='Fig28',
-        title='Porcentagem média de acertos na ACOLE inicial,\ntestes de Módulo 2 (completo) e ACOLE final')
-    bar_plot(ACOLE_1, MODULE_2, ACOLE_2, use_boxplot=True, filename='Fig28',
-        title='Distribuição da porcentagem de acertos na ACOLE inicial,\ntestes de Módulo 2 (completo) e ACOLE final')
+    """
+    Porcentagem média de acertos na ACOLE inicial
+    testes de Módulo 2 (completo) e ACOLE final
+    """
+    filename = 'Fig28_m2_testes'
+    bar_plot(ACOLE_1, MODULE_2, ACOLE_2, use_boxplot=False, filename=filename)
+    bar_plot(ACOLE_1, MODULE_2, ACOLE_2, use_boxplot=True, filename=filename)
 
 if __name__ == "__main__":
     plot()

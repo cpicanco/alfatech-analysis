@@ -62,7 +62,7 @@ def bar_plot(MODULE1, filename):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(12, 5)
     fig.set_dpi(100)
-    
+
     axs[0].set_ylabel('Porcentagem média de acertos')
     complete = [block for block in MODULE1.by_completion(True).blocks if block.min_trials < 0]
     bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[0], complete, 'Completo')
@@ -85,7 +85,7 @@ Número médio de sessões dos passos do módulo 1
 completo e incompleto
 """
 def plot():
-    bar_plot(MODULE1, 'Fig24')
+    bar_plot(MODULE1, 'Fig24_m1_passos')
 
 if __name__ == "__main__":
     plot()
