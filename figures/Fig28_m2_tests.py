@@ -6,10 +6,11 @@ from colors import color1
 from databases.students import students
 from databases import MODULE2, ACOLE1, ACOLE2
 
+from base import upper_summary
 from methods import statistics_from_blocks, output_path
-from Fig27_m1_tests import plot_blocks_pairs
+from Fig27_m1_tests import plot_blocks_pairs, boxplot_blocks_pairs
 
-def boxplot_blocks(ax, blocks, title):
+def boxplot_blocks(ax, blocks, title, write_start_annotation=True):
     bar_positions = np.arange(len(blocks))
 
     data = [[p for p in block.data['percentages'] if p is not None] for block in blocks]
@@ -18,28 +19,35 @@ def boxplot_blocks(ax, blocks, title):
 
     bp = ax.boxplot(data, positions=bar_positions, widths=0.6, sym='o', boxprops=boxprops, medianprops=medianprops)
 
-    ax.set_title(title)
+    ax.set_title(title, y=1.3)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
+    values = [np.mean(d) for d in data]
+    lengths = [len(d) for d in data]
+    medians = [np.median(d) for d in data]
+    upper_summary(ax, bar_positions, values, medians, lengths, x=-0.5, y=125, line_height=8, show_label=write_start_annotation)
+
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
 
-def plot_blocks(ax, blocks, title):
+def plot_blocks(ax, blocks, title, write_start_annotation=True):
     bar_positions = np.arange(len(blocks))
 
     bar_values, bar_stds, bar_lengths, bar_medians, mins, maxs = statistics_from_blocks(blocks)
 
     ax.set_ylim(0, 100)
-    ax.set_title(title)
+    ax.set_title(title, y=1.3)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
 
     bars = ax.bar(bar_positions, bar_values, color=color1)
+
+    upper_summary(ax, bar_positions, bar_values, bar_medians, bar_lengths, x=-0.5, y=125, line_height=8, show_label=write_start_annotation)
 
     ax.set_xticks(bar_positions + 0.4)
     ax.set_xticklabels([block.legend for block in blocks], rotation=45, ha='right')
@@ -67,8 +75,8 @@ def bar_plot(students, use_boxplot, filename):
                         for key, data in student_block.data.items():
                             if len(data) > 0:
                                 block.data[key].append(data[0])
-    regular_acole_label = 'ACOLE\nRegulares\nCV'
-    difficult_acole_label = 'ACOLE\nDificuldades'
+    regular_acole_label = 'Regulares\nCV'
+    difficult_acole_label = 'Dif. Ort.'
     ACOLE_1.LEITURA.legend = regular_acole_label
     ACOLE_2.LEITURA.legend = regular_acole_label
     ACOLE_1.LEITURA_DIFICULDADES.legend = difficult_acole_label
@@ -120,14 +128,14 @@ def bar_plot(students, use_boxplot, filename):
     ax_big.set_ylabel('Porcentagem média de acertos')
     # Add content to the axes (you can customize this based on your data)
     if use_boxplot:
-        boxplot_blocks(ax1, reading, 'Leitura')
-        boxplot_blocks(ax2, composition, 'Ditado por composição')
-        boxplot_blocks(ax3, manuscript, 'Ditado manuscrito')
+        boxplot_blocks_pairs(ax1, reading, 'Leitura', title_y=1.3)
+        boxplot_blocks_pairs(ax2, composition, 'ACOLE\nDitado por composição', title_y=1.3, write_start_annotation=False)
+        boxplot_blocks_pairs(ax3, manuscript, 'Ditado manuscrito', title_y=1.3, write_start_annotation=False)
         boxplot_blocks(ax_big, module_2, 'Módulo 2')
     else:
-        plot_blocks_pairs(ax1, reading, 'Leitura')
-        plot_blocks_pairs(ax2, composition, 'Ditado por composição')
-        plot_blocks_pairs(ax3, manuscript, 'Ditado manuscrito')
+        plot_blocks_pairs(ax1, reading, 'Leitura', title_y=1.3)
+        plot_blocks_pairs(ax2, composition, 'ACOLE\nDitado por composição', title_y=1.3, write_start_annotation=False)
+        plot_blocks_pairs(ax3, manuscript, 'Ditado manuscrito', title_y=1.3, write_start_annotation=False)
         plot_blocks(ax_big, module_2, 'Módulo 2')
 
     fig.tight_layout()

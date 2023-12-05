@@ -6,7 +6,7 @@ from colors import color1, color2, color3
 from databases import MODULE1, ACOLE1, ACOLE2
 from databases.students import students
 from methods import statistics_from_blocks, opt, histogram
-from base import default_axis_config, get_grouped_bar_positions, get_ax_top
+from base import default_axis_config, get_grouped_bar_positions, get_ax_top, upper_summary
 
 # def get_positions(num_groups, num_items_per_group, start, gap, width):
 #     def plot_position(i, j, start, gap, width):
@@ -18,7 +18,13 @@ from base import default_axis_config, get_grouped_bar_positions, get_ax_top
 #             positions.append(plot_position(i, j, start, gap, width))
 #     return positions
 
-def boxplot_blocks_pairs(ax, blocks, title, title_y=1.2, limity=True, color1=color1, color2=color2, label1='Inicial', label2='Final', bar_width=0.4, data='percentages'):
+def boxplot_blocks_pairs(ax, blocks, title,
+                         title_y=1.4, limity=True,
+                         color1=color1, color2=color2,
+                         label1='Inicial', label2='Final',
+                         bar_width=0.4,
+                         data='percentages',
+                         write_start_annotation=True):
     default_axis_config(ax, limit_y=limity)
     half = len(blocks) // 2
 
@@ -61,13 +67,25 @@ def boxplot_blocks_pairs(ax, blocks, title, title_y=1.2, limity=True, color1=col
         for patch in bplot['boxes']:
             patch.set_facecolor(color)
 
+    positions = list(positions1) + list(positions2)
+    values = bar_values1 + bar_values2
+    lengths = [len(v) for v in values]
+    medians = [np.median(v) for v in values]
+    values = [np.mean(v) for v in values]
+    upper_summary(ax, positions, values, medians, lengths, x=0.0, y=125, line_height=8, show_label=write_start_annotation)
+
     ax.set_xticks(np.array(positions2)-bar_width/2)
     ax.set_xticklabels(tick_labels, ha='center')
 
     return bp1, bp2, [label1, label2]
 
 
-def plot_blocks_pairs(ax, blocks, title, color1=color1, color2=color2, label1='Inicial', label2='Final', bar_width=0.4):
+def plot_blocks_pairs(ax, blocks, title,
+                      color1=color1, color2=color2,
+                      label1='Inicial', label2='Final',
+                      bar_width=0.4,
+                      title_y=1.4,
+                      write_start_annotation=True):
     default_axis_config(ax)
     half = len(blocks) // 2
     positions = get_grouped_bar_positions(half, 2, 0.5, 0.5, bar_width).flatten()
@@ -82,10 +100,17 @@ def plot_blocks_pairs(ax, blocks, title, color1=color1, color2=color2, label1='I
     bar_values1 = bar_values[::2]
     bar_values2 = bar_values[1::2]
 
-    ax.set_title(title, y=1.2)
+    ax.set_title(title, y=title_y)
 
     ax.bar(positions1, bar_values1, width=bar_width, color=color1, label=label1)
     ax.bar(positions2, bar_values2, width=bar_width, color=color2, label=label2)
+
+    positions = list(positions1) + list(positions2)
+    values = bar_values1 + bar_values2
+    lengths = bar_lengths[::2] + bar_lengths[1::2]
+    medians = bar_medians[::2] + bar_medians[1::2]
+    upper_summary(ax, positions, values, medians, lengths, x=0.3, y=125, line_height=8, show_label=write_start_annotation)
+
 
     ax.set_xticks(np.array(positions2)-bar_width/2)
     ax.set_xticklabels(tick_labels, ha='center')
@@ -188,18 +213,18 @@ def do_plot(ACOLE_1, MODULE_1, ACOLE_2, use_boxplot, filename):
 
     if use_boxplot:
         bp1, bp2, labels1 = boxplot_blocks_pairs(axs[0, 0], acole_reading, column1_label)
-        bp3, bp4, labels2 = boxplot_blocks_pairs(axs[0, 1], module_reading, column2_label, color1=color3, label1='Intermediário')
+        bp3, bp4, labels2 = boxplot_blocks_pairs(axs[0, 1], module_reading, column2_label, color1=color3, label1='Intermediário', write_start_annotation=False)
         boxplot_blocks_pairs(axs[1, 0], acole_dictation, ' ')
-        boxplot_blocks_pairs(axs[1, 1], module_dictation, ' ', color1=color3, label1='Intermediário',)
+        boxplot_blocks_pairs(axs[1, 1], module_dictation, ' ', color1=color3, label1='Intermediário', write_start_annotation=False)
         boxplot_blocks_pairs(axs[2, 0], acole_manuscript, ' ')
-        boxplot_blocks_pairs(axs[2, 1], module_manuscript, ' ', color1=color3, label1='Intermediário',)
+        boxplot_blocks_pairs(axs[2, 1], module_manuscript, ' ', color1=color3, label1='Intermediário',write_start_annotation=False)
     else:
         plot_blocks_pairs(axs[0, 0], acole_reading, column1_label)
-        plot_blocks_pairs(axs[0, 1], module_reading, column2_label, color1=color3, label1='Intermediário')
+        plot_blocks_pairs(axs[0, 1], module_reading, column2_label, color1=color3, label1='Intermediário',write_start_annotation=False)
         plot_blocks_pairs(axs[1, 0], acole_dictation, ' ')
-        plot_blocks_pairs(axs[1, 1], module_dictation, ' ', color1=color3, label1='Intermediário', bar_width=0.2)
+        plot_blocks_pairs(axs[1, 1], module_dictation, ' ', color1=color3, label1='Intermediário', bar_width=0.2, write_start_annotation=False)
         plot_blocks_pairs(axs[2, 0], acole_manuscript, ' ')
-        plot_blocks_pairs(axs[2, 1], module_manuscript, ' ', color1=color3, label1='Intermediário', bar_width=0.2)
+        plot_blocks_pairs(axs[2, 1], module_manuscript, ' ', color1=color3, label1='Intermediário', bar_width=0.2, write_start_annotation=False)
 
     x1, x2 = 0.35, 0.75
     y1 = -0.06
@@ -221,13 +246,13 @@ def do_plot(ACOLE_1, MODULE_1, ACOLE_2, use_boxplot, filename):
     ax2_top, unit2  = get_ax_top(axs[1, 0])
     ax3_top, unit3 = get_ax_top(axs[2, 0])
     center_x = 0.5
-    fig.text(center_x, ax1_top-unit1,
+    fig.text(center_x, ax1_top-unit1*5,
         'Leitura', ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
 
-    fig.text(center_x, ax2_top-unit2,
+    fig.text(center_x, ax2_top-unit2*3.5,
         'Ditado por composição', ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
 
-    fig.text(center_x, ax3_top-unit3,
+    fig.text(center_x, ax3_top-unit3*3.5,
         'Ditado manuscrito', ha='center', va='center', fontsize=12, color='black', weight='bold', backgroundcolor='white')
 
     plt.savefig(opt.output_path(), bbox_inches='tight')
