@@ -237,6 +237,9 @@ class Student:
     def get_first_and_second_acoles(self):
         return 0, 1
 
+    def get_first_acole(self):
+        return 0
+
     def has_two_acoles_first_incomplete(self):
         return len(self.acoles) > 1 and not self.acoles_is_complete[0]
 
@@ -391,6 +394,11 @@ class Students_Container(Base_Container):
                 [(student.mean_days_per_week(),) for student in students],
                 columns=['mean_days_per_week'])
 
+    def to_data_frame(self):
+        return pd.DataFrame(
+            [(student.id, student.sex, student.age, student.school_year, student.mean_days_per_week()) for student in students],
+            columns=['ID', 'Sexo', 'Idade', 'Ano Escolar', 'Dias por semana'])
+
     def by_frequency(self, range):
         return Students_Container([
             student for student in self.items() if student.mean_days_per_week() in range])
@@ -398,6 +406,17 @@ class Students_Container(Base_Container):
     def by_school(self, school_name):
         return Students_Container([
             student for student in self.items() if student.school.name == school_name])
+
+    def by_age(self, age):
+        return Students_Container([
+            student for student in self.items() if student.age == age])
+
+    def by_sex(self, sex):
+        return Students_Container([
+            student for student in self.items() if student.sex == sex])
+
+    def by_has_acole(self):
+        return Students_Container([student for student in students if len(student.acoles) > 0])
 
     def summary_by_frequency(self, range=None, ranges=None):
         # print('\nDays per week:')

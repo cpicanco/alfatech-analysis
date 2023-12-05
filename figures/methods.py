@@ -40,10 +40,10 @@ class OutputFiles:
 opt = OutputFiles()
 
 def statistics_from_block(block, key='percentages'):
-    excluded_students = []
     data_points = block.data[key]
-    students = block.data['students']
-    data_points = [d for d, p in zip(data_points, students) if d is not None and p.id not in excluded_students]
+    # data_points = [d for d in data_points if d is not None]
+    data_points = [d if d is not None else 0 for d in data_points]
+
     bar_length = len(data_points)
     if bar_length > 0:
         bar_value = np.mean(data_points)
@@ -121,9 +121,11 @@ def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequên
     plt.ylabel(ylabel)
 
     # Display the plot
+    opt.cd('histograms')
     opt.append_filename('_histogram_'+data_name)
     plt.savefig(opt.output_path().replace('\n', ' ').replace('*', '_Dif'), bbox_inches='tight')
     opt.reset_filename()
+    opt.back()
     plt.close()
 
 def output_path(filename):
