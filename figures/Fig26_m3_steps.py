@@ -49,7 +49,7 @@ def bar_plot(MODULE1, filename):
     fig.set_size_inches(10, 5)
     fig.set_dpi(100)
 
-    axs[0].set_ylabel('Porcentagem média de acertos')
+    axs[0].set_ylabel('Número médio de sessões')
     complete = [block for block in MODULE1.by_completion(True).blocks if block.min_trials < 0]
     bar_positions, bar_lengths, maxs, mins = plot_blocks(axs[0], complete, 'Completo')
     upper_summary_2(axs[0], bar_positions, bar_lengths, mins, maxs,
