@@ -121,13 +121,8 @@ def bar_plot(ACOLE, filename):
     plt.close()
 
 def plot():
-    # Porcentagem média de acertos da primeira ACOLE com palavras regulares e com dificuldades ortográficas
     bar_plot(ACOLE1, 'Fig17b_acole1')
-
-    # Porcentagem média de acertos da segunda ACOLE com palavras regulares e com dificuldades ortográficas
     bar_plot(ACOLE2, 'Fig17b_acole2')
-
-    # Porcentagem média de acertos da terceira ACOLE com palavras regulares e com dificuldades ortográficas
     bar_plot(ACOLE3, 'Fig17b_acole3')
 
 if __name__ == "__main__":

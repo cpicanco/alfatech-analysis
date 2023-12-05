@@ -87,7 +87,6 @@ def bar_plot(ACOLES, filename):
     plt.close()
 
 def plot():
-    print()
     # for student in students:
     #     print(student.school.name)
 

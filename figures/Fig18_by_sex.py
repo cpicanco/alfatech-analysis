@@ -6,8 +6,6 @@ from base import upper_summary, default_axis_config
 from Fig17 import top_labels
 from colors import color_median
 
-filename = 'Fig18_sexo'
-
 def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     num_age_groups = len(grouped_data[0])  # Assuming all age groups have the same number of blocks
     num_blocks = len(grouped_data)
@@ -49,7 +47,7 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     x_labels = [block[0].legend.replace('Ditado ', 'Ditado\n').replace('por ', 'por\n').replace('*', '') for block in grouped_data]
     ax.set_xticklabels(x_labels)
 
-def bar_plot(ACOLE):
+def bar_plot(ACOLE, filename):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(10, 5)
     fig.set_dpi(100)
@@ -108,7 +106,8 @@ def bar_plot(ACOLE):
     com palavras regulares e com dificuldades ortográficas, por ano escolar
 """
 def plot():
-    bar_plot(ACOLE1)
+    filename = 'Fig18_sexo'
+    bar_plot(ACOLE1, filename)
     # ACOLE1.summary()
 
 if __name__ == "__main__":

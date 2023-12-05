@@ -9,6 +9,7 @@ class Block:
     def __init__(self, _id, legend, code, min_trials):
         self.id = _id
         self.legend = legend
+        self.base_legend = legend
         self.code = code
         self.min_trials = min_trials
         self.data = { 'students': [],

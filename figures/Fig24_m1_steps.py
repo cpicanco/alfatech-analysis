@@ -13,7 +13,7 @@ def boxplot_blocks(ax, blocks, title):
     boxprops = dict(linewidth=2, color='black')
     medianprops = dict(linewidth=2, color='black')
 
-    bp = ax.boxplot(data, positions=bar_positions, widths=0.6, showfliers=False, boxprops=boxprops, medianprops=medianprops)
+    bp = ax.boxplot(data, positions=bar_positions, widths=0.6, boxprops=boxprops, medianprops=medianprops)
 
     ax.set_title(title)
     ax.spines['top'].set_visible(False)

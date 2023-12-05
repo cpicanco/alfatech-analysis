@@ -419,7 +419,7 @@ class Students_Container(Base_Container):
                 return student
 
     def from_ids(self, ids):
-        return [student for student in self.items() if student.id in ids]
+        return [student for student in self.items() for id in ids if student.id == id]
 
     def remove_ids(self, ids):
         self.__students = [student for student in self.items() if student.id not in ids]

@@ -93,5 +93,33 @@ def multicategory_bar_chart():
     # Show the plot
     plt.show()
 
+def histogram():
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from numpy import percentile
+
+    # Sample data (replace this with your own data)
+    data = np.random.randn(1000)
+
+    # Calculate the IQR
+    iqr = np.subtract(*percentile(data, [75, 25]))
+
+    # Calculate the bin width using Freedman-Diaconis rule
+    bin_width = 2 * iqr / (len(data) ** (1/3))
+
+    # Calculate the number of bins
+    num_bins = int((max(data) - min(data)) / bin_width)
+
+    # Plotting the histogram
+    plt.hist(data, bins=num_bins, color='blue', alpha=0.7, width=bin_width-0.02)
+
+    # Adding labels and title
+    plt.xlabel('X-axis Label')
+    plt.ylabel('Y-axis Label')
+    plt.title('Histogram Example')
+
+    # Display the plot
+    plt.show()
+
 if __name__ == "__main__":
-    multicategory_bar_chart()
+    histogram()

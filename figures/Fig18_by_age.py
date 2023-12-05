@@ -6,8 +6,6 @@ from base import default_axis_config, upper_summary
 from Fig17 import top_labels
 from colors import color_median
 
-filename = 'Fig18_idade'
-
 def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     num_items_in_block = len(grouped_data[0])
     num_blocks = len(grouped_data)
@@ -66,7 +64,8 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
                 bars = ax.bar(p, v, width=bar_width-0.05, label=labels[j], color=f'C{cl}')
             else:
                 bars = ax.bar(p, v, width=bar_width-0.05, color=f'C{cl}')
-            ax.hlines(m, bars[0].get_x(), bars[0].get_x() + bars[0].get_width(), linestyles='solid', color=color_median)
+            if m != 0:
+                ax.hlines(m, bars[0].get_x(), bars[0].get_x() + bars[0].get_width(), linestyles='solid', color=color_median)
 
     upper_summary(ax, positions, sorted_values, sorted_medians, sorted_lengths, x=-0.5, show_label=write_start_annotation)
 
@@ -75,7 +74,7 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
     ax.set_xticks(bar_positions)
     ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
 
-def bar_plot(ACOLE):
+def bar_plot(ACOLE, filename):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(16, 5)
     fig.set_dpi(100)
@@ -144,7 +143,7 @@ def bar_plot(ACOLE):
     com palavras regulares e com dificuldades ortográficas, por idade
 """
 def plot():
-    bar_plot(ACOLE1)
+    bar_plot(ACOLE1, 'Fig18_idade')
 
 if __name__ == "__main__":
     plot()

@@ -165,6 +165,7 @@ def school_from_student(connection, student_ids):
 # here we known for sure that each student has only one school
 # if this is not true, we need to change the way we populate the schools
 def populate_schools():
+    print(f'Populating student schools')
     with geic_db.connect() as connection:
         for student in students:
             student.assign_school(school_from_student(connection, [student.id]))
@@ -274,9 +275,9 @@ def populate_module_data(MODULE):
                             sessions += step_sessions
 
                         if block.min_trials < 0:
-                            (t, _, _, date) = get_step_trials(connection, rid, MODULE.id, block.id, student.ids)
+                            (t, _, percentage, date) = get_step_trials(connection, rid, MODULE.id, block.id, student.ids)
                         else:
-                            (t, _, _, date) = get_block_trials(connection, rid, MODULE.id, block.id, student.ids)
+                            (t, _, percentage, date) = get_block_trials(connection, rid, MODULE.id, block.id, student.ids)
                         trials += t
                         dates.append(date)
 
@@ -317,6 +318,7 @@ ACOLE3 = ACOLE3_Container()
 MODULE1 = MODULE1_Container()
 MODULE2 = MODULE2_Container()
 MODULE3 = MODULE3_Container()
+populate_schools()
 
 for i, ACOLE in enumerate([ACOLE1, ACOLE2, ACOLE3]):
     if ACOLE.cache_exists():

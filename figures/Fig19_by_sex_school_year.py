@@ -107,7 +107,7 @@ com palavras regulares e com dificuldades ortográficas,
 por ano escolar e gênero'
 """
 def plot():
-    bar_plot(ACOLE1, 'Fig19_ano_escolar_genero')
+    bar_plot(ACOLE1, 'Fig19_ano_escolar_sexo')
 
 if __name__ == "__main__":
     plot()

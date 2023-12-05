@@ -6,8 +6,6 @@ from base import upper_summary, default_axis_config
 from Fig17 import top_labels
 from colors import color_median
 
-filename = 'Fig18_ano_escolar'
-
 def plot_blocks(ax, grouped_data, title, adjustment=0.8, write_start_annotation=False):
     num_items_in_block = len(grouped_data[0])
     num_blocks = len(grouped_data)
@@ -76,7 +74,7 @@ def plot_blocks(ax, grouped_data, title, adjustment=0.8, write_start_annotation=
     ax.set_xticklabels([group[0].legend.replace('Ditado ', 'Ditado\n').replace('*', '') for group in grouped_data])
 
 
-def bar_plot(ACOLE):
+def bar_plot(ACOLE, filename):
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(10, 5)
     fig.set_dpi(100)
@@ -140,12 +138,13 @@ def bar_plot(ACOLE):
     plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()
 
-"""
+
+def plot():
+    """
     Porcentagem média de acertos da primeira ACOLE
     com palavras regulares e com dificuldades ortográficas, por ano escolar
-"""
-def plot():
-    bar_plot(ACOLE1)
+    """
+    bar_plot(ACOLE1, 'Fig18_ano_escolar')
     # ACOLE1.summary()
 
 if __name__ == "__main__":

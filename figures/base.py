@@ -53,3 +53,56 @@ def default_axis_config(ax, limit_y=True):
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='x', which='both', bottom=False, top=False)
+
+def get_ax_top(ax):
+    """
+    Get the y coordinate of the top of an axes in figure coordinates
+
+    *******MUST BE CALLED AFTER TIGHT LAYOUT******
+    """
+    # Create a blended transformation from data to figure coordinates
+    trans = ax.transData + ax.figure.transFigure.inverted()
+    # Transform the point (0, 100) from data to figure coordinates
+    fig_point1 = trans.transform((0, 100))
+    fig_point2 = trans.transform((0, 85))
+    # Print the y-value of the figure point
+    return fig_point1[1], fig_point2[1]-fig_point1[1]
+
+def get_grouped_bar_positions(num_groups, num_items_per_group, start, gap, width):
+    """Returns an array of positions for a grouped bar plot.
+
+    Args:
+        num_groups (int): The number of groups in the plot.
+        num_items_per_group (int): The number of items per group.
+        start (float): The starting position of the first group.
+        gap (float): The gap between groups.
+        width (float): The width of each bar.
+
+    Returns:
+        np.array: An array of shape (num_groups, num_items_per_group) containing the positions of each bar.
+
+    Raises:
+        ValueError: If any of the arguments are invalid.
+    """
+    # Validate the input arguments
+    if not (isinstance(num_groups, int) and num_groups > 0):
+        raise ValueError("num_groups must be a positive integer")
+    if not (isinstance(num_items_per_group, int) and num_items_per_group > 0):
+        raise ValueError("num_items_per_group must be a positive integer")
+    if not (isinstance(start, (int, float)) and start > 0):
+        raise ValueError("start must be a positive number")
+    if not (isinstance(gap, (int, float)) and gap > 0):
+        raise ValueError("gap must be a positive number")
+    if not (isinstance(width, (int, float)) and width > 0):
+        raise ValueError("width must be a positive number")
+
+    # Create an array of group indices
+    group_indices = np.arange(num_groups)
+    # Create an array of item indices
+    item_indices = np.arange(num_items_per_group)
+    # Create a grid of group and item indices
+    group_grid, item_grid = np.meshgrid(group_indices, item_indices, indexing="ij")
+    # Calculate the positions of each bar using a formula
+    positions = start + group_grid * (gap + 2 * width) + item_grid * (width + 0.1)
+    # Return the positions array
+    return positions
