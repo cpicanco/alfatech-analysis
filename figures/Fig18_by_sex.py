@@ -96,7 +96,7 @@ def bar_plot(ACOLE, filename):
 
     handles, labels = axs[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(sexes))
-    fig.text(0.5, -0.05, 'Ano escolar', ha='center', va='center', fontsize=12)
+    fig.text(0.5, -0.05, 'Gênero', ha='center', va='center', fontsize=12)
     plt.tight_layout()
     plt.savefig(output_path(filename), bbox_inches='tight')
     plt.close()

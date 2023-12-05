@@ -54,14 +54,14 @@ def plot_blocks(ax, grouped_data, title, adjustment=0.8, write_start_annotation=
         m = medians[start_index:end_index]
         c = colors[start_index:end_index]
 
-        sorted_v, sorted_l, sorted_m, sorted_cl = zip(*sorted(list(zip(v, l, m, c)), key=lambda x: x[0]))
+        sorted_v, sorted_l, sorted_m, sorted_cl, sorted_lb = zip(*sorted(list(zip(v, l, m, c, labels)), key=lambda x: x[0]))
         sorted_values.extend(sorted_v)
         sorted_lengths.extend(sorted_l)
         sorted_medians.extend(sorted_m)
         # now plot and do not forget to add labels
-        for j, (p, v, l, m, cl) in enumerate(zip(ps, sorted_v, sorted_l, sorted_m, sorted_cl)):
+        for j, (p, v, l, m, cl, lb) in enumerate(zip(ps, sorted_v, sorted_l, sorted_m, sorted_cl, sorted_lb)):
             if i == 0:
-                bars = ax.bar(p, v, width=bar_width-0.05, label=labels[j], color=f'C{cl}')
+                bars = ax.bar(p, v, width=bar_width-0.05, label=lb, color=f'C{cl}')
             else:
                 bars = ax.bar(p, v, width=bar_width-0.05, color=f'C{cl}')
             ax.hlines(m, bars[0].get_x(), bars[0].get_x() + bars[0].get_width(), linestyles='solid', color=color_median)

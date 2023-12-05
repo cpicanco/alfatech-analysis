@@ -54,14 +54,14 @@ def plot_blocks(ax, grouped_data, title, write_start_annotation=False):
         m = medians[start_index:end_index]
         c = colors[start_index:end_index]
 
-        sorted_v, sorted_l, sorted_m, sorted_cl = zip(*sorted(list(zip(v, l, m, c)), key=lambda x: x[0]))
+        sorted_v, sorted_l, sorted_m, sorted_cl, sorted_lb = zip(*sorted(list(zip(v, l, m, c, labels)), key=lambda x: x[0]))
         sorted_values.extend(sorted_v)
         sorted_lengths.extend(sorted_l)
         sorted_medians.extend(sorted_m)
         # now plot and do not forget to add labels
-        for j, (p, v, l, m, cl) in enumerate(zip(ps, sorted_v, sorted_l, sorted_m, sorted_cl)):
+        for j, (p, v, l, m, cl, lb) in enumerate(zip(ps, sorted_v, sorted_l, sorted_m, sorted_cl, sorted_lb)):
             if i == 0:
-                bars = ax.bar(p, v, width=bar_width-0.05, label=labels[j], color=f'C{cl}')
+                bars = ax.bar(p, v, width=bar_width-0.05, label=lb, color=f'C{cl}')
             else:
                 bars = ax.bar(p, v, width=bar_width-0.05, color=f'C{cl}')
             if m != 0:
@@ -132,6 +132,23 @@ def bar_plot(ACOLE, filename):
     plot_blocks(axs[1], difficult_blocks, top_labels[1].replace('\n', ' '))
 
     handles, labels = axs[0].get_legend_handles_labels()
+    sorted_handles_labels = sorted(zip(handles, labels), key=lambda x: x[1])
+    handles, labels = zip(*sorted_handles_labels)
+
+    handles = list(handles)
+    last_item = handles.pop()
+    handles.insert(0, last_item)
+    last_item = handles.pop()
+    handles.insert(0, last_item)
+    handles = tuple(handles)
+
+    labels = list(labels)
+    last_item = labels.pop()
+    labels.insert(0, last_item)
+    last_item = labels.pop()
+    labels.insert(0, last_item)
+    labels = tuple(labels)
+
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(grouped_ages))
     fig.text(0.5, -0.05, 'Idade', ha='center', va='center', fontsize=12)
     plt.tight_layout()

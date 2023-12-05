@@ -8,7 +8,7 @@ from Fig18_by_age import plot_blocks
 
 def bar_plot(ACOLE, filename):
     fig, axs = plt.subplots(2, 2, sharey=True)
-    fig.set_size_inches(12, 12)
+    fig.set_size_inches(16, 12)
     fig.set_dpi(100)
 
     # Sex F: 1051 data points
@@ -88,9 +88,31 @@ def bar_plot(ACOLE, filename):
             plot_blocks(axs[i, 1], difficult_blocks, ' ')
 
     handles, labels = axs[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.445), ncol=len(grouped_ages))
+    sorted_handles_labels = sorted(zip(handles, labels), key=lambda x: x[1])
+    handles, labels = zip(*sorted_handles_labels)
+    handles = list(handles)
+    last_item = handles.pop()
+    handles.insert(0, last_item)
+    handles = tuple(handles)
 
+    labels = list(labels)
+    last_item = labels.pop()
+    labels.insert(0, last_item)
+    labels = tuple(labels)
+
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.445), ncol=len(grouped_ages))
     handles, labels = axs[1, 0].get_legend_handles_labels()
+    sorted_handles_labels = sorted(zip(handles, labels), key=lambda x: x[1])
+    handles, labels = zip(*sorted_handles_labels)
+    handles = list(handles)
+    last_item = handles.pop()
+    handles.insert(0, last_item)
+    handles = tuple(handles)
+
+    labels = list(labels)
+    last_item = labels.pop()
+    labels.insert(0, last_item)
+    labels = tuple(labels)
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.020), ncol=len(grouped_ages))
 
     fig.text(0.9, 0.8,
