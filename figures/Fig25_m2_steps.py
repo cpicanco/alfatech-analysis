@@ -30,7 +30,7 @@ def plot_blocks(ax, blocks, title):
     bar_values, _, bar_lengths, _, mins, maxs = statistics_from_blocks(blocks, 'sessions', exclude_outliers=True)
 
     bar_width = 0.8
-    ax.set_ylim(0, 1.5)
+    ax.set_ylim(0, 1.8)
     ax.set_title(title, y=1.3)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
