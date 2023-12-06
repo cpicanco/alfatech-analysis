@@ -41,8 +41,8 @@ opt = OutputFiles()
 
 def statistics_from_block(block, key='percentages'):
     data_points = block.data[key]
-    # data_points = [d for d in data_points if d is not None]
-    data_points = [d if d is not None else 0 for d in data_points]
+    data_points = [d for d in data_points if d is not None]
+    # data_points = [d if d is not None else 0 for d in data_points]
 
     bar_length = len(data_points)
     if bar_length > 0:
@@ -89,7 +89,7 @@ def qq_plot(block):
     plt.savefig(opt.output_path(), bbox_inches='tight')
     plt.close()
 
-def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequência', bins=10, range=None):
+def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequência', bins=10, binwidth=10,range=None):
     fig1 = plt.figure()
     if bins is None:
         # Calculate the IQR
@@ -105,7 +105,7 @@ def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequên
         num_bins = int((min_ - max_) / bin_width)
     else:
         num_bins = bins
-        bin_width = 10
+        bin_width = binwidth
         if range is None:
             min_ = 0
             max_ = 100
@@ -114,7 +114,7 @@ def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequên
             max_ = range[1]
 
     # Plotting the histogram
-    plt.hist(data, bins=num_bins, range=(min_, max_), color='blue', alpha=0.7, width=bin_width-bin_width/10)
+    plt.hist(data, bins=num_bins, range=(min_, max_), color='blue', alpha=0.7, width=bin_width)
 
     # Adding labels and title
     plt.xlabel(xlabel)
@@ -127,6 +127,43 @@ def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequên
     opt.reset_filename()
     opt.back()
     plt.close()
+
+def histograms(data, data_names, xlabel='Porcentagem de acertos', ylabel='Frequência', bins=10, binwidth=10,range=None):
+    fig, axs = plt.subplots(3, 3)
+    fig.set_size_inches(12, 12)
+    num_bins = bins
+    bin_width = binwidth
+    min_ = range[0]
+    max_ = range[1]
+
+    for i, (d, title) in enumerate(zip(data, data_names)):
+        ax = axs[i//3, i%3]
+        if i < 8:
+            ax.set_ylim(0, 30)
+        ax.set_title(title, ha='center', y=1.025)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.tick_params(axis='x', which='both', bottom=False, top=False)
+
+        ax.hist(d, bins=num_bins, range=(min_, max_), color='blue', alpha=0.7, width=bin_width)
+        # draw a vertical line for the mean
+        ax.axvline(np.mean(d), color='k', linestyle='dashed', linewidth=1)
+
+    # Adding labels and title
+    axs[1, 0].set_ylabel(ylabel)
+    axs[2, 1].set_xlabel(xlabel)
+
+    # Display the plot
+    opt.cd('histograms')
+    opt.append_filename('_histogram_')
+    plt.tight_layout()
+    plt.savefig(opt.output_path().replace('\n', ' ').replace('*', '_Dif'), bbox_inches='tight')
+    opt.reset_filename()
+    opt.back()
+    plt.close()
+
+
 
 def output_path(filename):
     return opt.output_path(filename)

@@ -447,6 +447,12 @@ class Students_Container(Base_Container):
         students = self.from_ids(pairwise_ids)
         yield students[0], students[1]
 
+    def frequencies(self):
+        result = []
+        for student in self.items():
+            result.extend(student.frequency)
+        return result
+
 def cache_students():
     # students.merge_students_ids()
     students.save_to_file()
