@@ -271,6 +271,9 @@ class Students_Container(Base_Container):
             if student_data.ID in black_list:
                 continue
 
+            if age(student_data.BIRTHDATE) == 19:
+                print(student_data.ID, student_data.FULLNAME)
+
             if student_data.ID in correct_school_years.keys():
                 self.append(Student(student_data, None, correct_school_years[student_data.ID]))
             else:

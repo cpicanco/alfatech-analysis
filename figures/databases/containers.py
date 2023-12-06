@@ -48,6 +48,16 @@ class Block:
         clone.data = self.data.copy()
         return clone
 
+    def merge(self, block):
+        self.date.extend(block.date)
+        self.data['students'].extend(block.data['students'])
+        self.data['trials'].extend(block.data['trials'])
+        self.data['percentages'].extend(block.data['percentages'])
+        self.data['sessions'].extend(block.data['sessions'])
+        if 'deltas' in self.data:
+            self.data['deltas'].extend(block.data['deltas'])
+        return self
+
 class Container(Base_Container):
     def __init__(self, **kwargs):
         self.steps = []

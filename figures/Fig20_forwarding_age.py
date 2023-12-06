@@ -18,7 +18,7 @@ def bar_plot(ACOLE, filename):
     for i, ACOLE_by_module in enumerate([m1, m2, m3]):
         # grouped_sexes
 
-        grouped_ages = [[7, 8, 9], [10], [11], [12, 13, 14, 15, 19]]
+        grouped_ages = [[7, 8, 9], [10], [11], [12, 13, 14, 15]]
 
         all_data = [ACOLE_by_module.by_age(ages) for ages in grouped_ages]
 

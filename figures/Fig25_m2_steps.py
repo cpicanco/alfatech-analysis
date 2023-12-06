@@ -27,7 +27,7 @@ def boxplot_blocks(ax, blocks, title):
 def plot_blocks(ax, blocks, title):
     bar_positions = np.arange(len(blocks))
 
-    bar_values, _, bar_lengths, _, mins, maxs = statistics_from_blocks(blocks, 'sessions')
+    bar_values, _, bar_lengths, _, mins, maxs = statistics_from_blocks(blocks, 'sessions', exclude_outliers=True)
 
     bar_width = 0.8
     ax.set_ylim(0, 1.5)

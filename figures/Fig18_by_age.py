@@ -89,7 +89,7 @@ def bar_plot(ACOLE, filename):
     # 14: 24 data points
     # 15: 6 data points
     # 19: 3 data points
-    grouped_ages = [[7, 8], [9], [10], [11], [12], [13, 14, 15, 19]]
+    grouped_ages = [[7, 8], [9], [10], [11], [12], [13, 14, 15]]
 
     all_data = [ACOLE.by_age(ages) for ages in grouped_ages]
 

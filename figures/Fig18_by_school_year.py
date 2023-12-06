@@ -132,6 +132,8 @@ def bar_plot(ACOLE, filename):
     plot_blocks(axs[1], difficult_blocks, top_labels[1].replace('\n', ' '))
 
     handles, labels = axs[0].get_legend_handles_labels()
+    sorted_handles_labels = sorted(zip(handles, labels), key=lambda x: x[1])
+    handles, labels = zip(*sorted_handles_labels)
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(school_years))
     fig.text(0.5, -0.05, 'Ano escolar', ha='center', va='center', fontsize=12)
     plt.tight_layout()

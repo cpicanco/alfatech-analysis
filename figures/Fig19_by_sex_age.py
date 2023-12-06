@@ -41,7 +41,7 @@ def bar_plot(ACOLE, filename):
     for i, ACOLE_by_sex in enumerate([feminine, masculine]):
         # grouped_sexes
         if i == 0:
-            grouped_ages = [[8, 9], [10], [11], [12, 13, 14, 19]]
+            grouped_ages = [[8, 9], [10], [11], [12, 13, 14]]
         else:
             grouped_ages = [[7, 8, 9], [10], [11], [12, 13, 14, 15]]
         all_data = [ACOLE_by_sex.by_age(ages) for ages in grouped_ages]

@@ -11,7 +11,7 @@ import Fig26_m3_steps_per_school
 import Fig27_m1_tests_per_school
 import Fig28_m2_tests_per_school
 import Fig29_m3_tests_per_school
-import Fig30_frequency_deltas
+import Fig36_frequency
 import Fig18_by_sex, Fig19_by_sex_school_year, Fig20_forwarding_age
 import Fig20_forwarding_school_year, Fig20_forwarding_sex
 import Fig18_by_school, Fig20_forwarding_school, Fig28_m2_tests, Fig29_m3_tests
@@ -22,8 +22,8 @@ from methods import opt
 if __name__ == '__main__':
     opt.extension = '.pdf'
     figures = [
-        Fig17,
-        Fig17b,
+        # Fig17,
+        # Fig17b,
         Fig17c,
         Fig18_by_age,
         Fig18_by_school_year,
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         Fig27_m1_tests_per_school,
         Fig28_m2_tests_per_school,
         Fig29_m3_tests_per_school,
-        # Fig30_frequency_deltas
+        Fig36_frequency
     ]
     for figure in figures:
         figure.plot()

@@ -39,11 +39,16 @@ class OutputFiles:
 
 opt = OutputFiles()
 
-def statistics_from_block(block, key='percentages'):
+def statistics_from_block(block, key='percentages', exclude_outliers=False):
     data_points = block.data[key]
-    data_points = [d for d in data_points if d is not None]
-    # data_points = [d if d is not None else 0 for d in data_points]
+    if exclude_outliers:
+        data_points = [d for d in data_points if d is not None and d != 54]
+        students = [p.id for p, d in zip(block.data['students'], block.data[key]) if p is not None and d != 54]
+    else:
+        data_points = [d for d in data_points if d is not None]
+        students = [p.id for p in block.data['students'] if p is not None]
 
+    num_students = len(set(students))
     bar_length = len(data_points)
     if bar_length > 0:
         bar_value = np.mean(data_points)
@@ -51,7 +56,6 @@ def statistics_from_block(block, key='percentages'):
         bar_median = np.median(data_points)
         bar_min = np.min(data_points)
         bar_max = np.max(data_points)
-
     else:
         if key=='percentages':
             bar_length = 1
@@ -67,12 +71,12 @@ def statistics_from_block(block, key='percentages'):
             bar_min = np.nan
             bar_max = np.nan
 
-    return bar_value, bar_std, bar_length, bar_median, bar_min, bar_max
+    return bar_value, bar_std, num_students, bar_median, bar_min, bar_max
 
-def statistics_from_blocks(blocks, key='percentages'):
+def statistics_from_blocks(blocks, key='percentages', exclude_outliers=False):
     values, stds, lengths, medians, mins, maxs = [], [], [], [], [], []
     for block in blocks:
-        value, std, length, median, min_, max_ = statistics_from_block(block, key)
+        value, std, length, median, min_, max_ = statistics_from_block(block, key, exclude_outliers)
         values.append(value)
         stds.append(std)
         lengths.append(length)
