@@ -18,6 +18,18 @@ As consultas foram organizadas em arquivos de texto sql de forma modular dentro 
 
 Embora um esforço substancial tenha sido feito no sentido da modularização e abstração, o estágio de desenvolvimento atual é inicial e demanda refatoração.
 
+# Instalação no VSCode
+
+1. Instale o Python com o Pip (https://www.python.org/)
+2. Instale o VSCode (https://code.visualstudio.com/)
+3. Clique na opção "Source Control" ou pressione `CTRL+SHIFT+G` no teclado.
+4. Clone este repositório (por exemplo, por meio do link https://github.com/cpicanco/alfatech-analysis.git) ou o seu fork do repositório.
+5. Abra o `Powershell` dentro do VSCode; assegure-se que você está dentro da pasta do repositório.
+6. Crie um novo ambiente virtual: `py -m venv .alfatech`
+7. Ative o ambiente virtual dentro do VSCode quando ele perguntar para você ou faça isso manualmente no Powershell do VSCode `.\alfatech\Scripts\activate`
+8. Instale as dependências do projeto `py -m pip install -r requirements.txt`
+9. Lembre-se de desativar o ambiente virtual ao sair `.\alfatech\Scripts\deactivate` ou configure seu ambiente para que isso ocorra automaticamente.
+
 # Como começar a trabalhar com o cache?
 
 Após conseguir acesso aos arquivos de cache, copie eles para a pasta `cache`. Em seguida, execute um script dentro da pasta `figures`.
