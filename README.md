@@ -36,6 +36,8 @@ Após conseguir acesso aos arquivos de cache, copie eles para a pasta `cache`. E
 
 # Como começar a trabalhar com o banco de dados diretamente?
 
+Antes de começar, copie o arquivo `students_with_correct_school_year.tsv` para a pasta `figures\databases\students\`.
+
 ## Opção 1. Obtenha a acesso ao dump do banco de dados e importe ele para um servidor local.
 
 Essa opção pode ser usada para a análise dos dados existentes.
