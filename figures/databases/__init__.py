@@ -318,7 +318,11 @@ ACOLE3 = ACOLE3_Container()
 MODULE1 = MODULE1_Container()
 MODULE2 = MODULE2_Container()
 MODULE3 = MODULE3_Container()
-populate_schools()
+
+if students.cache_exists():
+    pass
+else:
+    populate_schools()
 
 for i, ACOLE in enumerate([ACOLE1, ACOLE2, ACOLE3]):
     if ACOLE.cache_exists():

@@ -148,6 +148,12 @@ class Student:
     def update_name(self):
         self.name = show_update_name(self.name)
 
+    def update_birthdate(self):
+        time_format = "%Y-%m-%d %H:%M:%S"
+        date1 = self.birthdate.strftime(time_format)
+        selected = show_merge_choice(date1, date1)
+        self.birthdate = datetime.strptime(selected, time_format)
+
         # don't need to prompt for modules, since they can be merged safely
         # self.has_m1 = self.has_m1 or student.has_m1
         # self.has_m2 = self.has_m2 or student.has_m2
@@ -271,11 +277,10 @@ class Students_Container(Base_Container):
             if student_data.ID in black_list:
                 continue
 
-            if age(student_data.BIRTHDATE) == 19:
-                print(student_data.ID, student_data.FULLNAME)
-
             if student_data.ID in correct_school_years.keys():
                 self.append(Student(student_data, None, correct_school_years[student_data.ID]))
+                if age(student_data.ID) == 10140:
+                    self.__students[-1].update_birthdate()
             else:
                 self.append(Student(student_data, None, ))
 

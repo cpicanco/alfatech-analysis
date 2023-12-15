@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from databases import ACOLE1
-from methods import statistics_from_block, output_path
+from methods import statistics_from_block, opt
 from base import upper_summary, default_axis_config
 from Fig17 import top_labels
 from colors import color_median
@@ -75,6 +75,7 @@ def plot_blocks(ax, grouped_data, title, adjustment=0.8, write_start_annotation=
 
 
 def bar_plot(ACOLE, filename):
+    opt.set_filename(filename)
     fig, axs = plt.subplots(1, 2, sharey=True)
     fig.set_size_inches(10, 5)
     fig.set_dpi(100)
@@ -137,7 +138,7 @@ def bar_plot(ACOLE, filename):
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=len(school_years))
     fig.text(0.5, -0.05, 'Ano escolar', ha='center', va='center', fontsize=12)
     plt.tight_layout()
-    plt.savefig(output_path(filename), bbox_inches='tight')
+    plt.savefig(opt.output_path(), bbox_inches='tight')
     plt.close()
 
 

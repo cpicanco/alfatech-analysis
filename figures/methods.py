@@ -10,6 +10,7 @@ class OutputFiles:
                  base_dir=os.path.abspath(__file__).rsplit("figures", 1)[0],
                  output_dir='output'):
         self.extension = extention
+        self.__base_extension = extention
         self.filename = ''
         self.__base_filename = ''
         self.base_dir = base_dir
@@ -24,6 +25,14 @@ class OutputFiles:
         self.filename += appendix
 
     def reset_filename(self):
+        self.filename = self.__base_filename
+
+    def reset_extension(self):
+        self.extension = self.__base_extension
+
+    def reset(self):
+        self.extension = self.__base_extension
+        self.directory = self.__base_output_dir
         self.filename = self.__base_filename
 
     def output_path(self, filename=None):
@@ -45,8 +54,16 @@ def statistics_from_block(block, key='percentages', exclude_outliers=False):
         data_points = [d for d in data_points if d is not None and d != 54]
         students = [p.id for p, d in zip(block.data['students'], block.data[key]) if p is not None and d != 54]
     else:
+        # opt.extension = '.tsv'
+        # opt.append_filename('_'+key+'_'+str(block.id))
+        # f = open(opt.output_path(), 'a', encoding='utf-8')
+        # f.write('\n'+str(block.id)+'\t'+str(block.school_year)+'\n')
         data_points = [d for d in data_points if d is not None]
+        # students = [f.write('\t'.join([str(p.id), p.name])+'\n') for p in block.data['students'] if p is not None]
         students = [p.id for p in block.data['students'] if p is not None]
+        # f.close()
+        # opt.reset_extension()
+        # opt.reset_filename()
 
     num_students = len(set(students))
     bar_length = len(data_points)
