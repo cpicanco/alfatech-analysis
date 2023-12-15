@@ -28,7 +28,7 @@ Embora um esforço substancial tenha sido feito no sentido da modularização e 
 6. Crie um novo ambiente virtual: `py -m venv .alfatech`
 7. Ative o ambiente virtual dentro do VSCode quando ele perguntar para você ou faça isso manualmente no Powershell do VSCode `.\alfatech\Scripts\activate`
 8. Instale as dependências do projeto `py -m pip install -r requirements.txt`
-9. Lembre-se de desativar o ambiente virtual ao sair (.\alfatech\Scripts\deactivate ou configure seu ambiente para que isso ocorra automaticamente.
+9. Lembre-se de desativar o ambiente virtual ao sair `.\alfatech\Scripts\deactivate` ou configure seu ambiente para que isso ocorra automaticamente.
 
 # Como começar a trabalhar com o cache?
 
