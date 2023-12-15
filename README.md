@@ -16,4 +16,18 @@ As consultas foram organizadas em arquivos de texto sql de forma modular dentro 
 3. Filtrar, limpar, editar, e salvar os objetos populados em um cache binário.
 4. E, finalmente, ler o cache para tarefas de graficação, exportação, e contrução de tabelas.
 
-Embora um esforço substancial tenha sido feito no sentido da modularização e abstração, o estágio de desenvolvimento atual é inicial e demanda refatoração.  
+Embora um esforço substancial tenha sido feito no sentido da modularização e abstração, o estágio de desenvolvimento atual é inicial e demanda refatoração.
+
+# Como começar a trabalhar com o cache?
+
+Após conseguir acesso aos arquivos de cache, copie eles para a pasta `cache`. Em seguida, execute um script dentro da pasta `figures`.
+
+# Como começar a trabalhar com o banco de dados diretamente?
+
+## Opção 1. Obtenha a acesso ao dump do banco de dados e importe ele para um servidor local.
+
+Essa opção pode ser usada para a análise dos dados existentes.
+
+## Opção 2. Obtenha as senhas de acesso ao banco de dados do ambiente de produção.
+
+Embora possível, essa opção não é recomendada no presente estágio de desenvolvimento.
