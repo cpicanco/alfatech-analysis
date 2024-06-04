@@ -5,9 +5,8 @@ from datetime import datetime
 from collections import Counter
 from sqlalchemy import text
 import pandas as pd
-
 from .methods import age, similarity, show_merge_choice, show_update_name
-from ..queries import template_from_name
+from ..queries import template_from_name, school_from_student, get_frequency_from_student
 from ..engine import geic_db
 from ..base_container import Base_Container
 from ..constants import MODULO1_ID, MODULO2_ID, MODULO3_ID
@@ -17,7 +16,7 @@ def read_csv(file_path):
     with open(file_path, encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='\t')
         for row in reader:
-            data_dict[row['ID']] = row['ANO']
+            data_dict[int(row['ID'])] = {'ANO':row['ANO'], 'NOME':row['NOME'], 'SEXO':row['SEXO']}
     return data_dict
 
 class School:
@@ -37,7 +36,12 @@ class School:
             self.state = school_data.UF
 
 class Student:
-    def __init__(self, student_data=None, forwarding_trial_id=None, correct_school_year=None):
+    def __init__(self,
+                 student_data=None,
+                 forwarding_trial_id=None,
+                 correct_school_year=None,
+                 correct_name=None,
+                 correct_sex=None):
         self.forwarding_modules = {
             32216 : 'Módulo 1',
             33048 : 'Módulo 2',
@@ -69,10 +73,21 @@ class Student:
             self.age = age(student_data.BIRTHDATE)
             self.birthdate = student_data.BIRTHDATE
             self.sex = student_data.SEX
-            if correct_school_year is None:
+            # try to handle the case where the school year is not provided
+            try:
                 self.school_year = int(student_data.SCHOOL_YEAR.strip())
-            else:
+            except ValueError:
+                print(f'Warning: {student_data.ID} has invalid school year: {student_data.SCHOOL_YEAR}')
+                self.school_year = None
+
+            if correct_school_year is not None:
                 self.school_year = int(correct_school_year.strip())
+
+            if correct_name is not None:
+                self.name = correct_name
+
+            if correct_sex is not None:
+                self.sex = correct_sex
 
         self.ids.append(self.id)
         self.forward_to(forwarding_trial_id)
@@ -166,14 +181,10 @@ class Student:
         #     elif self_module is not None and student_module is not None:
         #         self_module.merge(student_module)
 
-        # if self.frequency is None:
-        #     self.frequency = student.frequency
-
-        # elif self.frequency is not None and student.frequency is not None:
-        #     self.frequency.extend(student.frequency)
-
-        # self.days_per_week = None
-        # self.calculate_days_per_week()
+    def calculate_frequency(self, connection):
+        if self.frequency is None:
+            self.frequency = get_frequency_from_student(connection, self.ids)
+            self.calculate_days_per_week()
 
     def forward_to(self, module_id):
         self.forwarding = self.forwarding_modules[module_id]
@@ -198,7 +209,7 @@ class Student:
 
     def calculate_days_per_week(self):
         if self.days_per_week is None:
-            if self.frequency is not None:
+            if self.frequency:
                 df = pd.DataFrame({'date': self.frequency})
                 df['date_string'] = df['date'].dt.strftime('%Y-%m-%d')
                 df = df.drop_duplicates(subset=['date_string'])
@@ -223,6 +234,8 @@ class Student:
                 # Merge the result with the dynamically generated weeks and fill NaN with zero
                 result = pd.merge(week_range, result, on=['week'], how='left').fillna(0)
                 self.days_per_week = result
+            else:
+                print(f'Frequency is not a valid datetimelike object for student {self.id}')
 
     def mean_days_per_week(self):
         return self.days_per_week['count'].sum()/len(self.days_per_week)
@@ -267,24 +280,54 @@ class Students_Container(Base_Container):
     def filename(cls):
         return os.path.join('cache', f'{cls.__name__}.pkl')
 
-    def populate(self, students, correct_school_years):
+    def populate(self, students, data_to_override):
         # black_list = [9719,9670,9898,8076,8072,10064,10053,10076,10191]
         black_list = []
+        # make sure to save the filename at figures/databases/students/students.tsv
+        # filename = os.path.join('figures', 'databases', 'students', 'students.tsv')
+        # output = open(filename, 'w', encoding='utf-8')
+        # output.write('ID\tNOME\tANO\tSEXO\n')
         for student_data in students:
+            # write to file
+            # output.write(f'{student_data.ID}\t{student_data.FULLNAME}\t{student_data.SCHOOL_YEAR}\t{student_data.SEX}\n')
             if 'DUPLICATA DESCONSIDERAR' in student_data.FULLNAME:
                 continue
 
             if student_data.ID in black_list:
                 continue
 
-            if student_data.ID in correct_school_years.keys():
-                self.append(Student(student_data, None, correct_school_years[student_data.ID]))
+            if student_data.ID in data_to_override.keys():
+                data = data_to_override[student_data.ID]
+                student = Student(student_data, None,
+                                    data['ANO'],
+                                    data['NOME'],
+                                    data['SEXO'])
+                print(f'Overriding data for student {student_data.ID}')
+            else:
+                print(f'Loading data for student {student_data.ID}')
+                student = Student(student_data, None, None, None, None)
+
+            # here we known for sure that each student has only one school
+            # if this is not true, we need to change the way we populate the schools
+            student.assign_school(school_from_student(connection, [student.id]))
+
+            self.append(student)
+
+            try:
                 if age(student_data.ID) == 10140:
                     self.__students[-1].update_birthdate()
-            else:
-                self.append(Student(student_data, None, ))
+            except AttributeError:
+                pass
 
+        # output.close()
         self.merge_students_ids()
+        for student in self.__students:
+            student.calculate_frequency(connection)
+            if not student.frequency:
+                print(f'Student {student.id} has no frequency, removing from list.')
+                self.__students.remove(student)
+            else:
+                print(f'Student: {student.id} {student.name} successfully loaded.')
 
     def merge_students_ids(self):
         P1 = [9953, 10053]
@@ -295,7 +338,7 @@ class Students_Container(Base_Container):
         ids_to_merge = [P1, P2, P3, P4, P5]
         for ids in ids_to_merge:
             for student1, student2 in students.pairwise(ids):
-                student1.merge(student2)
+                student1.merge(student2, prompt=False)
 
         # get the second id from each pair
         ids_to_remove = [ids[1] for ids in ids_to_merge]
@@ -473,8 +516,8 @@ if Students_Container.cache_exists():
 else:
     print('Populating Students cache')
     students = Students_Container()
-    correct_school_years = read_csv(os.path.join('figures', 'databases', 'students', 'students_with_correct_school_year.tsv'))
+    students_data_to_override = read_csv(os.path.join('figures', 'databases', 'students', 'students_data_to_override.tsv'))
     with geic_db.connect() as connection:
         students_template = template_from_name('students_from_alphatech')
-        students.populate(connection.execute(text(students_template)).fetchall(), correct_school_years)
+        students.populate(connection.execute(text(students_template)).fetchall(), students_data_to_override)
         students.save_to_file()

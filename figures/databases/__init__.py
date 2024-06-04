@@ -3,173 +3,16 @@
 py -m pip install mysql-connector-python
 py -m pip install SQLAlchemy
 """
-# python
-import sys
-import datetime
-
-# database
-from sqlalchemy import text, bindparam
-
 from .engine import geic_db
 from .students import students
-from .queries import template_from_name
 
-from .constants import ACOLE_BLOCK_IDS, MODULO1_ID, MODULO2_ID, MODULO3_ID
-from .constants import MODULO1_STEP_IDS, MODULO2_STEP_IDS, MODULO3_STEP_IDS
+from .queries import get_registration
+from .queries import complete_acole, get_forwarding_trial, get_block_trials, get_step_trials
+from .queries import get_step_sessions, complete_module, complete_module_from_student
+
+from .constants import MODULO1_ID, MODULO2_ID, MODULO3_ID
 from .containers import ACOLE1_Container,  ACOLE2_Container,  ACOLE3_Container
 from .containers import MODULE1_Container, MODULE2_Container, MODULE3_Container
-
-def get_trials(trials_data):
-    if trials_data == []:
-        date = datetime.datetime(1900, 1, 1)
-    else:
-        date = trials_data[0].DATA_EXECUCAO_INICIO
-
-    trials = [1 if trial.RESULTADO < 1 else 0 for trial in trials_data]
-    trials_len = len(trials)
-    if trials_len > 0:
-        percentage = sum(trials)*100.0/trials_len
-        if percentage > 100:
-            # print('student_ids:' + str(student_ids),
-            #     'registration_id:' + str(registration_id),
-            #     'program_id:' + str(program_id),
-            #     'block_id:' + str(block_id))
-            print(percentage, trials_len)
-            print(trials)
-            raise Exception('Percentage greater than 100%')
-    else:
-        percentage = None
-        trials_len = None
-    return (trials, trials_len, percentage, date)
-
-def query(connection, template, parameters):
-    sql_text = text(template)
-    for key, _ in parameters.items():
-        if key == 'STUDENT_IDS' or key == 'STEP_IDS' or key == 'BLOCK_IDS':
-            sql_text = sql_text.bindparams(bindparam(key, expanding=True))
-    return connection.execute(sql_text, parameters).fetchall()
-
-def get_frequency_from_student(connection, student_ids):
-    template = template_from_name('frequency_from_student')
-    parameters = {'STUDENT_IDS': student_ids}
-    frequency = query(connection, template, parameters)
-    return [f[0] for f in frequency if frequency != []]
-
-def get_step_trials(connection, registration_id, program_id, step_id, student_ids):
-    template = template_from_name('step_trials_from_student')
-    parameters = {'REGISTRATION_ID': registration_id,
-                  'PROGRAM_ID': program_id,
-                  'STEP_ID': step_id,
-                  'STUDENT_IDS': student_ids}
-    trials_data = query(connection, template, parameters)
-    return get_trials(trials_data)
-
-def get_block_trials(connection, registration_id, program_id, block_id, student_ids):
-    template = template_from_name('block_trials_from_student')
-    parameters = {'REGISTRATION_ID': registration_id,
-                    'PROGRAM_ID': program_id,
-                    'BLOCK_ID': block_id,
-                    'STUDENT_IDS': student_ids}
-    trials_data = query(connection, template, parameters)
-    return get_trials(trials_data)
-
-def get_forwarding_trial(connection, acole_registration_id, acole_id, student_ids):
-    template = template_from_name('module_forward_trials_from_student')
-    parameters = {'PROGRAM_ID': acole_id,
-                    'STUDENT_IDS': student_ids,
-                    'REGISTRATION_ID': acole_registration_id}
-
-    module_forward_trials = query(connection, template, parameters)
-    return module_forward_trials[0][0] if module_forward_trials != [] else None
-
-def get_registration(connection, program_id, student_ids):
-    template = template_from_name('oldest_program_registration_from_student')
-    parameters = {'PROGRAM_ID': program_id,
-                  'STUDENT_IDS': student_ids}
-    registration = query(connection, template, parameters)
-    return registration
-
-def get_step_sessions(connection, registration_id, program_id, step_id, student_ids):
-    template = template_from_name('session_count_from_program_step')
-    parameters = {
-        'REGISTRATION_ID': registration_id,
-        'PROGRAM_ID': program_id,
-        'STEP_ID': step_id,
-        'STUDENT_IDS': student_ids}
-    sessions = query(connection, template, parameters)
-    return sessions[0][0] if sessions != [] else None
-
-def is_complete(result):
-    if result == []:
-        return False
-    return False if result[0].IS_COMPLETE == 0 else True
-
-def complete_module(connection, registration_id, student_ids, module_id):
-    template = template_from_name('complete_module_from_registration')
-    parameters = {
-        'REGISTRATION_ID': registration_id,
-        'PROGRAM_ID': module_id,
-        'STUDENT_IDS': student_ids,
-        'STEP_IDS': None,
-        'UNIQUE_COUNT': None}
-    if MODULE1_Container().id == module_id:
-        parameters['UNIQUE_COUNT'] = len(MODULO1_STEP_IDS)
-        parameters['STEP_IDS'] = MODULO1_STEP_IDS
-    elif MODULE2_Container().id == module_id:
-        parameters['UNIQUE_COUNT'] = len(MODULO2_STEP_IDS)
-        parameters['STEP_IDS'] = MODULO2_STEP_IDS
-    elif MODULE3_Container().id == module_id:
-        parameters['UNIQUE_COUNT'] = len(MODULO3_STEP_IDS)
-        parameters['STEP_IDS'] = MODULO3_STEP_IDS
-
-    result = query(connection, template, parameters)
-    return is_complete(result)
-
-def complete_module_from_student(connection, student_ids, module_id):
-    template = template_from_name('complete_module_from_student')
-    parameters = {
-        'PROGRAM_ID': module_id,
-        'STUDENT_IDS': student_ids,
-        'STEP_IDS': None,
-        'UNIQUE_COUNT': None}
-    if MODULE1_Container().id == module_id:
-        parameters['UNIQUE_COUNT'] = len(MODULO1_STEP_IDS)
-        parameters['STEP_IDS'] = MODULO1_STEP_IDS
-    elif MODULE2_Container().id == module_id:
-        parameters['UNIQUE_COUNT'] = len(MODULO2_STEP_IDS)
-        parameters['STEP_IDS'] = MODULO2_STEP_IDS
-    elif MODULE3_Container().id == module_id:
-        parameters['UNIQUE_COUNT'] = len(MODULO3_STEP_IDS)
-        parameters['STEP_IDS'] = MODULO3_STEP_IDS
-
-    result = query(connection, template, parameters)
-    return is_complete(result)
-
-def complete_acole(connection, registration_id, student_ids, acole_id):
-    template = template_from_name('complete_acole_from_registration')
-    parameters = {
-        'REGISTRATION_ID': registration_id,
-        'PROGRAM_ID': acole_id,
-        'STUDENT_IDS': student_ids,
-        'BLOCK_IDS': ACOLE_BLOCK_IDS,
-        'UNIQUE_COUNT': len(ACOLE_BLOCK_IDS)}
-    result = query(connection, template, parameters)
-    return is_complete(result)
-
-def school_from_student(connection, student_ids):
-    template = template_from_name('school_from_student')
-    parameters = {'STUDENT_IDS': student_ids}
-    school = query(connection, template, parameters)
-    return school[0] if school != [] else None
-
-# here we known for sure that each student has only one school
-# if this is not true, we need to change the way we populate the schools
-def populate_schools():
-    print(f'Populating student schools')
-    with geic_db.connect() as connection:
-        for student in students:
-            student.assign_school(school_from_student(connection, [student.id]))
-        students.save_to_file()
 
 def populate_acole_data(ACOLE, registration_index=0):
     # file = open(ACOLE.filename()+'.tsv', 'w', encoding='utf-8')
@@ -177,9 +20,9 @@ def populate_acole_data(ACOLE, registration_index=0):
     # file.write('\t'.join(['NOME', 'ID', 'MATRICULA.ID.COMPLETAS', 'MATRICULA.ID.INCOMPLETAS', 'ENCAMINHAMENTO'])+'\n')
     with geic_db.connect() as connection:
         for student in students:
-            if student.frequency is None:
-                student.frequency = get_frequency_from_student(connection, student.ids)
-                student.calculate_days_per_week()
+            # if student.frequency is None:
+            #     student.frequency = get_frequency_from_student(connection, student.ids)
+            #     student.calculate_days_per_week()
 
             acole_registration = get_registration(connection, ACOLE.id, student.ids)
 
@@ -320,51 +163,47 @@ MODULE2 = MODULE2_Container()
 MODULE3 = MODULE3_Container()
 
 if students.cache_exists():
-    pass
-else:
-    populate_schools()
+    for i, ACOLE in enumerate([ACOLE1, ACOLE2, ACOLE3]):
+        if ACOLE.cache_exists():
+            print(f'Loading ACOLE {i + 1} from cache')
+            if i == 0:
+                ACOLE1 = ACOLE.load_from_file()
+            elif i == 1:
+                ACOLE2 = ACOLE.load_from_file()
+            elif i == 2:
+                ACOLE3 = ACOLE.load_from_file()
 
-for i, ACOLE in enumerate([ACOLE1, ACOLE2, ACOLE3]):
-    if ACOLE.cache_exists():
-        print(f'Loading ACOLE {i + 1} from cache')
-        if i == 0:
-            ACOLE1 = ACOLE.load_from_file()
-        elif i == 1:
-            ACOLE2 = ACOLE.load_from_file()
-        elif i == 2:
-            ACOLE3 = ACOLE.load_from_file()
+        else:
+            print(f'Populating ACOLE {i + 1} cache')
+            if i == 0:
+                populate_acole_data(ACOLE1, i)
+            elif i == 1:
+                populate_acole_data(ACOLE2, i)
+            elif i == 2:
+                populate_acole_data(ACOLE3, i)
 
-    else:
-        print(f'Populating ACOLE {i + 1} cache')
-        if i == 0:
-            populate_acole_data(ACOLE1, i)
-        elif i == 1:
-            populate_acole_data(ACOLE2, i)
-        elif i == 2:
-            populate_acole_data(ACOLE3, i)
-
-for i, MODULE in enumerate([MODULE1, MODULE2, MODULE3]):
-    if MODULE.cache_exists():
-        print(f'Loading MODULE {i+1} ({MODULE.id}) from cache')
-        if i == 0:
-            MODULE1 = MODULE.load_from_file()
-        elif i == 1:
-            MODULE2 = MODULE.load_from_file()
-        elif i == 2:
-            MODULE3 = MODULE.load_from_file()
-    else:
-        print(f'Populating MODULE {i+1} ({MODULE.id}) cache')
-        if i == 0:
-            populate_module_data(MODULE1)
-        elif i == 1:
-            populate_module_data(MODULE2)
-        elif i == 2:
-            populate_module_data(MODULE3)
-            ACOLE1.save_to_file()
-            ACOLE2.save_to_file()
-            ACOLE3.save_to_file()
-            MODULE1.save_to_file()
-            MODULE2.save_to_file()
-            MODULE3.save_to_file()
-            students.save_to_file()
-            print('Cache saved')
+    for i, MODULE in enumerate([MODULE1, MODULE2, MODULE3]):
+        if MODULE.cache_exists():
+            print(f'Loading MODULE {i+1} ({MODULE.id}) from cache')
+            if i == 0:
+                MODULE1 = MODULE.load_from_file()
+            elif i == 1:
+                MODULE2 = MODULE.load_from_file()
+            elif i == 2:
+                MODULE3 = MODULE.load_from_file()
+        else:
+            print(f'Populating MODULE {i+1} ({MODULE.id}) cache')
+            if i == 0:
+                populate_module_data(MODULE1)
+            elif i == 1:
+                populate_module_data(MODULE2)
+            elif i == 2:
+                populate_module_data(MODULE3)
+                ACOLE1.save_to_file()
+                ACOLE2.save_to_file()
+                ACOLE3.save_to_file()
+                MODULE1.save_to_file()
+                MODULE2.save_to_file()
+                MODULE3.save_to_file()
+                students.save_to_file()
+                print('Cache saved')
