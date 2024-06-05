@@ -149,16 +149,24 @@ def histogram(data, data_name, xlabel='Porcentagem de acertos', ylabel='Frequên
     opt.back()
     plt.close()
 
-def histograms(data, data_names, xlabel='Porcentagem de acertos', ylabel='Frequência', bins=10, binwidth=10,range=None):
-    fig, axs = plt.subplots(3, 3)
-    fig.set_size_inches(12, 12)
+def histograms(data, data_names,
+               xlabel='Porcentagem de acertos',
+               ylabel='Frequência', bins=10, binwidth=10, hist_range=None):
+    n = len(data)
+    rows = int(np.ceil(n / 3.0))
+    fig, axs = plt.subplots(rows, 3)
+    fig.set_size_inches(12, 12 * rows / 3.0)
     num_bins = bins
     bin_width = binwidth
-    min_ = range[0]
-    max_ = range[1]
+    min_ = hist_range[0]
+    max_ = hist_range[1]
+
+    # Flatten the axs array for easy iteration
+    axs = axs.flatten()
 
     for i, (d, title) in enumerate(zip(data, data_names)):
-        ax = axs[i//3, i%3]
+        ax = axs[i]
+
         if i < 8:
             ax.set_ylim(0, 30)
         ax.set_title(title, ha='center', y=1.025)
@@ -171,9 +179,15 @@ def histograms(data, data_names, xlabel='Porcentagem de acertos', ylabel='Frequ�
         # draw a vertical line for the mean
         ax.axvline(np.mean(d), color='k', linestyle='dashed', linewidth=1)
 
-    # Adding labels and title
-    axs[1, 0].set_ylabel(ylabel)
-    axs[2, 1].set_xlabel(xlabel)
+    # Remove any unused axes
+    for i in range(n, len(axs)):
+        fig.delaxes(axs[i])
+
+    for ax in reversed(axs):
+        if ax in fig.axes:
+            ax.set_ylabel(ylabel)
+            ax.set_xlabel(xlabel)
+            break
 
     # Display the plot
     opt.cd('histograms')

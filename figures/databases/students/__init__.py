@@ -1,6 +1,6 @@
 import os
 import csv
-from datetime import datetime
+from datetime import datetime, date
 
 from collections import Counter
 from sqlalchemy import text
@@ -207,8 +207,12 @@ class Student:
         elif module_id == MODULO3_ID:
             return self.has_m3
 
-    def calculate_days_per_week(self):
-        if self.days_per_week is None:
+    def calculate_days_per_week(self, must_override=False):
+        def weeks_for_year(year):
+            last_week = date(year, 12, 28)
+            return last_week.isocalendar().week
+
+        if self.days_per_week is None or must_override:
             if self.frequency:
                 df = pd.DataFrame({'date': self.frequency})
                 df['date_string'] = df['date'].dt.strftime('%Y-%m-%d')
@@ -219,26 +223,67 @@ class Student:
                 df['week'] = df['date'].dt.isocalendar().week
 
                 # Group by year and week, calculate count
-                result = df.groupby(['week']).size().reset_index(name='count')
+                result = df.groupby(['year', 'week']).size().reset_index(name='count')
 
-                # Find the minimum and maximum dates
-                min_week = result['week'].min()
-                max_week = result['week'].max()
+                # sort by year, then by week
+                result = result.sort_values(by=['year', 'week'])
 
-                # Generate a range of weeks based on the number of weeks
-                week_range = pd.DataFrame(
-                    [(week,) for week in range(min_week, max_week + 1)],
-                    columns=['week']
-                )
+                # create an array with unique years in datetime format
+                years = result['year'].unique()
 
-                # Merge the result with the dynamically generated weeks and fill NaN with zero
-                result = pd.merge(week_range, result, on=['week'], how='left').fillna(0)
+                # for each year, create a dataframe with weeks from iso calendar
+                weeks_container = []
+                for year in years:
+                    weeks = pd.DataFrame({'week': range(1, weeks_for_year(year) + 1), 'year': year, 'count': 0})
+                    weeks_container.append(weeks)
+                weeks = pd.concat(weeks_container)
+
+                # find the first year-week in result
+                first_year = result['year'].min()
+                first_week = result[result['year'] == first_year]['week'].min()
+
+                # find the last year-week in result
+                last_year = result['year'].max()
+                last_week = result[result['year'] == last_year]['week'].max()
+
+                # delete all weeks before the first year-week in weeks
+                weeks = weeks[(weeks['year'] > first_year) | (weeks['week'] >= first_week)]
+
+                # delete all weeks after the last year-week in weeks
+                weeks = weeks[(weeks['year'] < last_year) | (weeks['week'] <= last_week)]
+
+                # merge weeks with result
+                result = pd.merge(weeks, result, on=['year', 'week'], how='left')
+
+                # fill NaN values with 0 inplace for 'count_y' column
+                result['count_y'].fillna(0, inplace=True)
+
+                # rename 'count_y' column to 'count'
+                result.rename(columns={'count_y': 'count'}, inplace=True)
+
+                # drop 'count_x' column inplace
+                result.drop(columns=['count_x'], inplace=True)
                 self.days_per_week = result
             else:
                 print(f'Frequency is not a valid datetimelike object for student {self.id}')
 
     def mean_days_per_week(self):
         return self.days_per_week['count'].sum()/len(self.days_per_week)
+
+    def has_frequency(self):
+        if self.frequency is None:
+            return False
+
+        if self.days_per_week is None:
+            return False
+
+        if not self.frequency:
+            return False
+
+        if self.days_per_week.empty:
+            return False
+
+        return True
 
     def has_two_complete_acoles(self):
         self.__true_indices = [i for i, value in enumerate(self.acoles_is_complete) if value]
@@ -321,13 +366,15 @@ class Students_Container(Base_Container):
 
         # output.close()
         self.merge_students_ids()
+        ids_to_remove = []
         for student in self.__students:
             student.calculate_frequency(connection)
             if not student.frequency:
-                print(f'Student {student.id} has no frequency, removing from list.')
-                self.__students.remove(student)
+                ids_to_remove.append(student.id)
+                print(f'Student {student.id} has no frequency, will remove from list.')
             else:
                 print(f'Student: {student.id} {student.name} successfully loaded.')
+        self.remove_ids(ids_to_remove)
 
     def merge_students_ids(self):
         P1 = [9953, 10053]
@@ -453,6 +500,10 @@ class Students_Container(Base_Container):
     def by_frequency(self, range):
         return Students_Container([
             student for student in self.items() if student.mean_days_per_week() in range])
+
+    def by_date(self, date):
+        return Students_Container([
+            student for student in self.items() if date in student.frequency])
 
     def by_school(self, school_name):
         return Students_Container([

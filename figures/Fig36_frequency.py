@@ -1,21 +1,23 @@
 from databases.students import students
+from databases.students.methods import previous_year, today, str_to_date
+
 from methods import opt, histogram, histograms
 
 import matplotlib.pyplot as plt
-from collections import Counter
-from datetime import datetime
+# from collections import Counter
+# from datetime import datetime
 import matplotlib.dates as mdates
 
-"""
-    Distribuição da frequência geral e por escola.
-"""
 def bar_plot(students, filename, use_boxplot=False):
+    """
+        Distribuição da frequência geral e por escola.
+    """
     opt.set_filename(filename)
     if use_boxplot:
         print("Not implemented")
         return
     else:
-        histogram([student.mean_days_per_week() for student in students],
+        histogram([student.mean_days_per_week() for student in students if student.has_frequency()],
                   '',
                   xlabel='Dias por semana (média)',
                   ylabel='Número de estudantes',
@@ -23,30 +25,29 @@ def bar_plot(students, filename, use_boxplot=False):
                   binwidth=0.08,
                   bins=30)
 
-
-"""
-    Distribuição de frequência por escola e geral.
-    A média de cada distribuição é mostrada com uma linha tracejada vertical.
-"""
 def bar_plot_2(data, filename, labels):
+    """
+        Distribuição de frequência por escola e geral.
+        A média de cada distribuição é mostrada com uma linha tracejada vertical.
+    """
     opt.set_filename(filename)
     histograms([[student.mean_days_per_week() for student in students] for students in data],
                 labels,
                 xlabel='Dias por semana (média)',
                 ylabel='Número de estudantes',
-                range=(0, 3),
+                hist_range=(0, 3),
                 binwidth=0.08,
                 bins=30)
 
-"""
-    Frequência de comparecimento acumulada, em dias.
-    Absoluta à esquerda e relativa à direita.
+def frequency_plot(data, schools, n_per_school, filename, date_range=None):
+    """
+        Frequência de comparecimento acumulada, em dias.
+        Absoluta à esquerda e relativa à direita.
 
-    A medida relativa é calculada dividindo-se o número de dias
-    pelo número de estudantes atendimento em cada escola.
+        A medida relativa é calculada dividindo-se o número de dias
+        pelo número de estudantes atendimento em cada escola.
 
-"""
-def frequency_plot(data, schools, n_per_school, filename):
+    """
     opt.set_filename(filename)
     fig, axes = plt.subplots(1, 2)
     fig.set_size_inches(12, 5)
@@ -67,6 +68,13 @@ def frequency_plot(data, schools, n_per_school, filename):
         # Create a list of datetimes from the list of strings
         dates = students.frequencies()
         dates = sorted(dates)
+
+        # filter out dates out of range
+        if date_range:
+            start_date, end_date = date_range
+            dates = [date for date in dates if start_date <= date <= end_date]
+            axes[0].set_xlim(start_date, end_date)
+            axes[1].set_xlim(start_date, end_date)
 
         accumulated_absolute = [i for i in range(1, len(dates) + 1)]
 
@@ -102,7 +110,20 @@ def plot():
         bar_plot(students_by_school, filename)
 
     # accumulated_frequency_plot(students_by_school_list, schools, filename="Fig37_frequency_accumulated")
-    frequency_plot(students_by_school_list, schools, [len(students) for students in students_by_school_list], filename="Fig38_relative_frequency_accumulated")
+    frequency_plot(students_by_school_list, schools,
+                   [len(students) for students in students_by_school_list],
+                   filename="Fig38_relative_frequency_accumulated")
+
+    dates = [
+        ('20220601', '20230601'),
+        ('20230601', '20240601')]
+
+    for date in dates:
+        begin_date, end_date = date
+        frequency_plot(students_by_school_list, schools,
+                   [len(students) for students in students_by_school_list],
+                   filename=f"Fig38_relative_frequency_accumulated_{begin_date}_{end_date}",
+                   date_range=[str_to_date(begin_date), str_to_date(end_date)])
 
     students_by_school_list.append(students)
     schools.append('Todos')

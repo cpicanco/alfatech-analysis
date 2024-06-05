@@ -10,6 +10,19 @@ def age(birthdate):
     age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
     return age
 
+def str_to_date(str, format='%Y%m%d'):
+    return datetime.strptime(str, format)
+
+def previous_year(n=1, from_date=None):
+    if from_date is None:
+        date = datetime.now()
+    else:
+        date = from_date
+    return date.year - n
+
+def today():
+    return datetime.now().year
+
 def similarity(str1, str2):
     # set1 = set(str1)
     # set2 = set(str2)
